@@ -14,74 +14,65 @@
 ## Section 1: Gameplay
 
 **Game Progression:**
-- Players start by selecting their spaceships and arena.
-- The game begins with players positioned at different points in the arena.
-- Players control their ships, trying to eliminate opponents by shooting or ramming them.
-- The game continues until only one player remains or the time limit is reached.
-
-**Win and Loss Conditions:**
-- **Win:** Be the last player remaining or have the highest score when the time limit is reached.
-- **Loss:** Lose all your lives or have the lowest score when the time limit is reached.
-
-**Levels:**
-- The game features multiple arenas (levels) with different layouts and hazards.
-- Each arena has unique characteristics affecting gameplay.
-
-**Points:**
-- Points are awarded for damaging opponents, eliminating opponents, and surviving longer.
-- Bonus points for stylish maneuvers and avoiding hazards.
+- The game begins with players positioned at opposite corners of the map.
+- Players control their ships, trying to eliminate opponents by shooting them.
+- The player who shoots the opponent twice (once in ship mode, once in pilot mode) wins the round.
+- First player to 5, 10, or 15 rounds (player choice) wins.
 
 **Controls:**
 - **Keyboard:**
-  - Arrow keys for movement (up, down, left, right)
-  - Spacebar to shoot
-  - Shift key for special maneuvers (e.g., boost)
-- **Mouse:** Aim and shoot (optional feature)
+  - Players use two keys each (one for shooting, one for turning)
+  - Default keybinds: player 1 uses "W" and "Q" to turn and shoot, and player 2 uses "<" and ">" to turn and shoot.
+- **Mouse:** 
+  - Players can use the mouse to interact with the UI to select the map/start the game.
 
 **Physics:**
-- The game uses a custom physics engine to simulate realistic spaceship movement and collisions.
-- Physics includes inertia, friction, and collision detection.
+- The physics engine will calculte the movement of the ships as players turn and shoot, including:
+- Position of the ship with a fixed velocity and input-based rotation
+- Recoil when the player shoots
+- Acceleration when the player double taps the turn button
+- Collisions with the walls and other spaceships
+- Gravity between the spaceships and planets placed around the map.
 
 **Game Flow:**
-1. Main Menu: Choose game mode, arena, and spaceship.
-2. Gameplay: Players battle in the selected arena until a win/loss condition is met.
-3. End Screen: Display scores and winner, option to restart or return to main menu.
+1. Main Menu: Choose the map and number of rounds needed to win and start the game.
+2. Gameplay: Players battle in the selected arena until once player dies.
+3. End Screen: Display scores and winner, option to restart with same settings or return to main menu.
 
 **Graphics:**
-- Combination of sprites and vector graphics for spaceships and arenas.
-- Basic animations for movement, shooting, and explosions.
+- Sprites for spaceships, bullets, pilots, and obstacles such as planets in the arena.
+- No vector graphics needed for now
+- Animation for spaceship movement and shooting.
 
 ## Section 2: Feature Set
 
 ### Priority 1 Features (Game cannot work without this)
-- **Basic Spaceship Movement:** Implement keyboard controls for spaceship movement (Justin)
-- **Collision Detection:** Basic collision detection between spaceships and arena boundaries (Nora)
-- **Basic Shooting Mechanic:** Implement shooting and damage system (Marco)
-- **Win/Loss Conditions:** Implement game logic to determine win/loss conditions (Justin)
+- **Spaceship Movement and Shooting:** Implement keyboard controls/animation for basic spaceship movement (constant velocity + rotation) and shooting (Marco)
+- **Collision Detection:** Collision detection between spaceships, bullets, and arena boundaries (Justin)
+- **Menus:** Implement shooting and damage system (Nora)
+- **Win/Loss Conditions:** Implement game logic to determine win/loss conditions (Nora)
 
 ### Priority 2 Features (Minimum grade of C)
 - **Arena Selection:** Multiple arenas with different layouts (Nora)
-- **Basic HUD:** Display player lives and scores (Marco)
-- **Sound Effects:** Basic sound effects for shooting and explosions (Justin)
-- **Physics Integration:** Basic implementation of inertia and friction (Nora)
+- **Basic HUD:** Display player lives and scores (Nora)
+- **Sound Effects:** Basic sound effects for shooting and explosions (Marco)
+- **Physics Integration:** Implementation of friction when spaceship is in contact with arena border (Justin)
 
 ### Priority 3 Features (Minimum grade of B)
-- **Special Maneuvers:** Implement boost and evasive maneuvers (Marco)
+- **Advanced Movement:** Implement double tap turn button to boost and recoil when spaceship shoots (Marco)
 - **Advanced Collision Handling:** More accurate and detailed collision responses (Justin)
 - **Arena Hazards:** Add environmental hazards to arenas (e.g., asteroids, black holes) (Nora)
-- **Improved HUD:** Enhanced HUD with additional info (e.g., power-ups, time left) (Marco)
 
 ### Priority 4 Features (Minimum grade of A-)
-- **Custom Graphics:** Create custom sprites and vector graphics for spaceships and arenas (Marco)
-- **Music:** Background music for gameplay (Justin)
-- **Multiplayer:** Networked multiplayer mode (Nora)
+- **Custom Graphics:** Create custom sprites for spaceships and arenas (Nora)
+- **Music:** Background music for gameplay (Marco)
 - **AI Opponents:** Implement AI for solo play or to fill multiplayer slots (Justin)
 
 ## Section 3: Timeline
 
 ### Week 1
-- **Justin:** Basic spaceship movement (P1), Basic shooting mechanic (P1)
-- **Marco:** Collision detection (P1), Sound effects (P2)
+- **Marco:** Basic spaceship movement and shooting (P1)
+- **Justin:** Collision detection (P1), Sound effects (P2)
 - **Nora:** Arena selection (P2), Basic HUD (P2)
 
 ### Week 2
