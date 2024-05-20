@@ -49,22 +49,22 @@
 ### Priority 1 Features (Game cannot work without this)
 - **Spaceship Movement and Shooting:** Implement keyboard controls/animation for basic spaceship movement (constant velocity + rotation) and shooting (Marco)
 - **Collision Detection:** Collision detection between spaceships, bullets, and arena boundaries (Justin)
-- **Menus:** Implement shooting and damage system (Nora)
-- **Win/Loss Conditions:** Implement game logic to determine win/loss conditions (Nora)
+- **Game Flow:** Implement logic to determine winner/loser and when to switch scenes (Nora)
 
 ### Priority 2 Features (Minimum grade of C)
+- **Advanced Movement:** Implement double tap turn button to boost and recoil when spaceship shoots (Marco)
 - **Arena Selection:** Multiple arenas with different layouts (Nora)
 - **Basic HUD:** Display player lives and scores (Nora)
-- **Sound Effects:** Basic sound effects for shooting and explosions (Marco)
 - **Physics Integration:** Implementation of friction when spaceship is in contact with arena border (Justin)
 
 ### Priority 3 Features (Minimum grade of B)
-- **Advanced Movement:** Implement double tap turn button to boost and recoil when spaceship shoots (Marco)
+- **Sound Effects:** Basic sound effects for shooting and explosions (Marco)
 - **Advanced Collision Handling:** More accurate and detailed collision responses (Justin)
 - **Arena Hazards:** Add environmental hazards to arenas (e.g., asteroids, black holes) (Nora)
 
 ### Priority 4 Features (Minimum grade of A-)
 - **Custom Graphics:** Create custom sprites for spaceships and arenas (Nora)
+- **Multiple arenas:** Create multiple arenas (Nora)
 - **Music:** Background music for gameplay (Marco)
 - **AI Opponents:** Implement AI for solo play or to fill multiplayer slots (Justin)
 
@@ -72,17 +72,17 @@
 
 ### Week 1
 - **Marco:** Basic spaceship movement and shooting (P1)
-- **Justin:** Collision detection (P1), Sound effects (P2)
-- **Nora:** Arena selection (P2), Basic HUD (P2)
+- **Justin:** Collision detection (P1), Friction (P2)
+- **Nora:** Game Flow (P1), Basic HUD (P2)
 
 ### Week 2
 - **Justin:** Win/Loss conditions (P1), Advanced collision handling (P3)
-- **Marco:** Special maneuvers (P3), Improved HUD (P3)
-- **Nora:** Physics integration (P2), Arena hazards (P3)
+- **Marco:** Special maneuvers (P2)
+- **Nora:** Physics integration (P2), Improved HUD (P3)
 
 ### Week 3
 - **Justin:** AI opponents (P4), Music (P4)
-- **Marco:** Custom graphics (P4), Multiplayer (P4)
+- **Marco:** Sound Effects (P3), Music (P4)
 - **Nora:** Finalize and polish all features, ensuring seamless integration (all features)
 
 ## Section 4: Disaster Recovery
