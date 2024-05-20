@@ -1,8 +1,8 @@
-# Astro Party Game Design Document
+# Astro Function Game Design Document
 
 ## Section 0: Summary
 
-**Working Title:** Astro Party
+**Working Title:** Astro Function
 
 **Team Members:**
 - Justin (Programmer, Physics Integration)
@@ -46,60 +46,60 @@
 
 ## Section 2: Feature Set
 
-### Priority 1 Features (Game cannot work without this)
+### Priority 1 Features
 - **Spaceship Movement and Shooting:** Implement keyboard controls/animation for basic spaceship movement (constant velocity + rotation) and shooting (Marco)
 - **Collision Detection:** Collision detection between spaceships, bullets, and arena boundaries (Justin)
 - **Game Flow:** Implement logic to determine winner/loser and when to switch scenes (Nora)
 
-### Priority 2 Features (Minimum grade of C)
+### Priority 2 Features
 - **Advanced Movement:** Implement double tap turn button to boost and recoil when spaceship shoots (Marco)
 - **Arena Selection:** Multiple arenas with different layouts (Nora)
 - **Basic HUD:** Display player lives and scores (Nora)
 - **Physics Integration:** Implementation of friction when spaceship is in contact with arena border (Justin)
 
-### Priority 3 Features (Minimum grade of B)
-- **Sound Effects:** Basic sound effects for shooting and explosions (Marco)
-- **Advanced Collision Handling:** More accurate and detailed collision responses (Justin)
+### Priority 3 Features
+- **Sound Effects:** Basic sound effects for shooting and explosions (Justin)
+- **Advanced Collision Handling:** More accurate and detailed collision responses (Marco)
 - **Arena Hazards:** Add environmental hazards to arenas (e.g., asteroids, black holes) (Nora)
 
-### Priority 4 Features (Minimum grade of A-)
+### Priority 4 Features
 - **Custom Graphics:** Create custom sprites for spaceships and arenas (Nora)
 - **Multiple arenas:** Create multiple arenas (Nora)
-- **Music:** Background music for gameplay (Marco)
-- **AI Opponents:** Implement AI for solo play or to fill multiplayer slots (Justin)
+- **Music:** Background music for gameplay (Justin)
+- **AI Opponents:** Implement AI for solo play or to fill multiplayer slots (Marco)
 
 ## Section 3: Timeline
 
 ### Week 1
-- **Marco:** Basic spaceship movement and shooting (P1)
-- **Justin:** Collision detection (P1), Friction (P2)
-- **Nora:** Game Flow (P1), Basic HUD (P2)
+- **Marco:** Spaceship Movement and Shooting
+- **Justin:** Collision Detection
+- **Nora:** Game Flow
 
 ### Week 2
-- **Justin:** Win/Loss conditions (P1), Advanced collision handling (P3)
-- **Marco:** Special maneuvers (P2)
-- **Nora:** Physics integration (P2), Improved HUD (P3)
+- **Justin:** Physics Integration, Sound Effects
+- **Marco:** Advanced Movement
+- **Nora:** Arena Selection, Basic HUD
 
 ### Week 3
-- **Justin:** AI opponents (P4), Music (P4)
-- **Marco:** Sound Effects (P3), Music (P4)
-- **Nora:** Finalize and polish all features, ensuring seamless integration (all features)
+- **Justin:** Music
+- **Marco:** Advanced Collision Handling, AI Opponents
+- **Nora:** Arena Hazards, Custom Graphics
 
 ## Section 4: Disaster Recovery
 
 ### Justin
 - **Issue:** Falling behind on spaceship movement or shooting mechanic
-- **Plan:** Reallocate time from AI opponents (P4) and Music (P4) to complete high-priority tasks.
+- **Plan:** Reallocate time from Music to complete high-priority tasks.
 
 ### Marco
 - **Issue:** Difficulty with special maneuvers or HUD
-- **Plan:** Simplify special maneuvers and HUD features to ensure completion of basic functionality. Delay custom graphics if necessary.
+- **Plan:** Simplify special maneuvers and HUD features to ensure completion of basic functionality. Reallocate time from AI.
 
 ### Nora
 - **Issue:** Problems with physics integration or arena hazards
 - **Plan:** Focus on completing essential physics integration first. Simplify or reduce arena hazards if falling behind.
 
-By following this structured plan, we aim to ensure the successful development of Astro Party within the given timeline while maintaining flexibility to handle potential setbacks.
+By following this structured plan, we aim to ensure the successful development of Astro Function within the given timeline while maintaining flexibility to handle potential setbacks.
 
 
 
