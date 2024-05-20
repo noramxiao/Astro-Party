@@ -1,9 +1,8 @@
-# Astro Function Game Design Document
+# Space Wars Game Design Document
 
 ## Section 0: Summary
 
-**Working Title:** Astro Function
-
+**Working Title:** Space Wars
 **Team Members:**
 - Justin (Programmer, Physics Integration)
 - Marco (Programmer, Graphics and Animation)
@@ -98,8 +97,3 @@
 ### Nora
 - **Issue:** Problems with physics integration or arena hazards
 - **Plan:** Focus on completing essential physics integration first. Simplify or reduce arena hazards if falling behind.
-
-By following this structured plan, we aim to ensure the successful development of Astro Function within the given timeline while maintaining flexibility to handle potential setbacks.
-
-
-
