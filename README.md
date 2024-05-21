@@ -3,6 +3,7 @@
 ## Section 0: Summary
 
 **Working Title:** Space Wars
+
 **Team Members:**
 - Justin (Programmer, Physics Integration)
 - Marco (Programmer, Graphics and Animation)
