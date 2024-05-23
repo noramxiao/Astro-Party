@@ -48,8 +48,8 @@
 
 ### Priority 1 Features
 - **Controls:** Implementation of keyboard controls (Marco)
-- **Map:** Implementation of arena borders and obstacles (Justin)
 - **Vector Graphics:** Create graphics for spaceships, pilots, and bullets (Justin)
+- **Map:** Implementation of arena borders and obstacles (Justin)
 - **Game Flow:** Implement logic to determine winner/loser and when to switch scenes (Nora)
 
 ### Priority 2 Features
@@ -58,7 +58,7 @@
 - **Basic HUD:** Display player lives and scores (Nora)
 
 ### Priority 3 Features
-- **Sound Effects:** Basic sound effects for shooting and explosions (Marco)
+- **Sound Effects:** Sound effects for shooting and explosions (Marco)
 - **Camera movement:** Dynamically zoom in on the scene of action (Justin)
 - **Arena Hazards:** Add environmental hazards to arenas (e.g., asteroids, black holes) (Nora)
 
