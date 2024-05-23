@@ -47,19 +47,19 @@
 ## Section 2: Feature Set
 
 ### Priority 1 Features
-- **Spaceship Movement and Shooting:** Implement keyboard controls/animation for basic spaceship movement (constant velocity + rotation) and shooting (Marco)
-- **Collision Detection:** Collision detection between spaceships, bullets, and arena boundaries (Justin)
+- **Controls:** Implementation of keyboard controls (Marco)
+- **Map:** Implementation of arena borders and obstacles (Justin)
+- **Vector Graphics:** Create graphics for spaceships, pilots, and bullets (Justin)
 - **Game Flow:** Implement logic to determine winner/loser and when to switch scenes (Nora)
 
 ### Priority 2 Features
 - **Advanced Movement:** Implement double tap turn button to boost and recoil when spaceship shoots (Marco)
-- **Arena Selection:** Multiple arenas with different layouts (Nora)
-- **Basic HUD:** Display player lives and scores (Nora)
 - **Physics Integration:** Implementation of friction when spaceship is in contact with arena border (Justin)
+- **Basic HUD:** Display player lives and scores (Nora)
 
 ### Priority 3 Features
-- **Sound Effects:** Basic sound effects for shooting and explosions (Justin)
-- **Advanced Collision Handling:** More accurate and detailed collision responses (Marco)
+- **Sound Effects:** Basic sound effects for shooting and explosions (Marco)
+- **Camera movement:** Dynamically zoom in on the scene of action (Justin)
 - **Arena Hazards:** Add environmental hazards to arenas (e.g., asteroids, black holes) (Nora)
 
 ### Priority 4 Features
