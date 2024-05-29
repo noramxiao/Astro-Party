@@ -27,7 +27,7 @@ typedef struct entity_info {
 } entity_info_t;
 
 entity_info_t *make_type_info(entity_type_t type) {
-  entity_info *info = malloc(sizeof(entity_info_t));
+  entity_info_t *info = malloc(sizeof(entity_info_t));
   info->type = type;
   return info;
 }
