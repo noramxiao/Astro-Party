@@ -18,6 +18,7 @@ const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 
 const double SHIP_MASS = 10.0;
+const size_t CIRC_NPOINTS = 100;
 
 enum mode {
   HOME,
@@ -25,15 +26,77 @@ enum mode {
   POST_GAME
 };
 
+
+
 struct state {
   enum mode mode; // Keeps track of what page game is on
   size_t P1_score;
   size_t P2_score;
   
   list_t *assets;
+  
+
+
   scene_t *scene;
 };
 
+
+
+
+
+
+
+/** Make a rectangle-shaped body object.
+ *
+ * @param center a vector representing the center of the body.
+ * @param width the width of the rectangle
+ * @param height the height of the rectangle
+ * @return pointer to the rectangle-shaped body
+ */
+list_t *make_rectangle(vector_t center, double width, double height) {
+  list_t *points = list_init(4, free);
+  vector_t *p1 = malloc(sizeof(vector_t));
+  *p1 = (vector_t){center.x - width / 2, center.y - height / 2};
+
+  vector_t *p2 = malloc(sizeof(vector_t));
+  *p2 = (vector_t){center.x + width / 2, center.y - height / 2};
+
+  vector_t *p3 = malloc(sizeof(vector_t));
+  *p3 = (vector_t){center.x + width / 2, center.y + height / 2};
+
+  vector_t *p4 = malloc(sizeof(vector_t));
+  *p4 = (vector_t){center.x - width / 2, center.y + height / 2};
+
+  list_add(points, p1);
+  list_add(points, p2);
+  list_add(points, p3);
+  list_add(points, p4);
+
+  return points;
+}
+
+void add_bounds(state_t *state) {
+  list_t *wall1_shape =
+      make_rectangle((vector_t){MAX.x, MAX.y / 2}, WALL_DIM, MAX.y);
+  body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, white,
+                                      make_type_info(WALL), free);
+  list_t *wall2_shape =
+      make_rectangle((vector_t){0, MAX.y / 2}, WALL_DIM, MAX.y);
+  body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, white,
+                                      make_type_info(WALL), free);
+  list_t *ceiling_shape =
+      make_rectangle((vector_t){MAX.x / 2, MAX.y}, MAX.x, WALL_DIM);
+  body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, white,
+                                        make_type_info(WALL), free);
+  list_t *ground_shape =
+      make_rectangle((vector_t){MAX.x / 2, 0}, MAX.x, WALL_DIM);
+  body_t *ground = body_init_with_info(ground_shape, INFINITY, white,
+                                       make_type_info(WALL), free);
+  scene_add_body(state->scene, wall1);
+  scene_add_body(state->scene, wall2);
+  scene_add_body(state->scene, ceiling);
+  scene_add_body(state->scene, ground);
+}
 void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
   /*TODO: edit with Space Wars implementation*/
   body_t *froggy = scene_get_body(state->scene, 0);
