@@ -126,8 +126,12 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
 void on_click(state_t *state, double x, double y) {
   switch (state->mode) {
     case HOME:
-      
+
   }
+}
+
+void home_init(state_t *state) {
+  
 }
 
 state_t *emscripten_init() {
@@ -139,6 +143,8 @@ state_t *emscripten_init() {
   state->P2_score = 0;
   state->scene = scene_init();
   srand(time(NULL));
+
+  home_init(state);
 
   // BACKGROUND
   SDL_Rect background_bbox = (SDL_Rect){
