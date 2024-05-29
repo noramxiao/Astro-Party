@@ -22,11 +22,15 @@ enum Mode {
   POST_GAME
 };
 
+
+
 struct state {
   enum Mode mode; // Keeps track of what page game is on
   size_t P1_score;
   size_t P2_score;
   
+
+
   scene_t *scene;
 };
 
