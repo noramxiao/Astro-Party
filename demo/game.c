@@ -34,8 +34,6 @@ struct state {
   size_t P2_score;
   
   list_t *assets;
-  
-
 
   scene_t *scene;
 };
