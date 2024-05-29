@@ -14,8 +14,12 @@ typedef enum {
 
 typedef struct entity_info {
 	entity_type_t type;
+	size_t player;
 } entity_info_t;
 
+entity_type_t get_type(body_t *body);
+
+entity_info_t *make_type_info(entity_type_t type);
 /** 
  * Creates a body for a spaceship. Will just be an isosceles triangle for now.
  * 
