@@ -40,8 +40,8 @@
 3. End Screen: Display scores and winner, option to restart with same settings or return to main menu.
 
 **Graphics:**
-- Sprites for spaceships, bullets, pilots, and obstacles such as planets in the arena.
-- No vector graphics needed for now
+- Vector graphics spaceships, bullets, and pilots (things that rotate).
+- Sprites for obstacles, borders (things that don't rotate).
 - Animation for spaceship movement and shooting.
 
 ## Section 2: Feature Set
@@ -64,7 +64,7 @@
 
 ### Priority 4 Features
 - **Custom Graphics:** Create custom sprites for spaceships and arenas (Nora)
-- **Multiple arenas:** Create multiple arenas (Nora)
+- **Multiple arenas:** Create multiple arenas and allow selection (Nora)
 - **Music:** Background music for gameplay (Justin)
 - **AI Opponents:** Implement AI for solo play or to fill multiplayer slots (Marco)
 

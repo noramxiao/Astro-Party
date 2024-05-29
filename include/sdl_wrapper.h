@@ -13,12 +13,11 @@
 
 // Values passed to a key handler when the given arrow key is pressed
 typedef enum {
-  LEFT_ARROW = 1,
-  UP_ARROW = 2,
-  RIGHT_ARROW = 3,
-  DOWN_ARROW = 4,
-  SPACE_BAR = 5,
-} arrow_key_t;
+  P1_TURN = 1,
+  P1_SHOOT = 2,
+  P2_TURN = 3,
+  P2_SHOOT = 4,
+} player_key_t;
 
 /**
  * The possible types of key events.
