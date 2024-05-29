@@ -80,6 +80,7 @@ static void newtonian_gravity(void *info) {
   }
 }
 
+
 void create_newtonian_gravity(scene_t *scene, double G, body_t *body1,
                               body_t *body2) {
   list_t *bodies = list_init(2, NULL);
@@ -92,6 +93,43 @@ void create_newtonian_gravity(scene_t *scene, double G, body_t *body1,
   scene_add_bodies_force_creator(scene, (force_creator_t)newtonian_gravity, aux,
                                  bodies);
 }
+
+
+void create_global_gravity(scene_t *scene, double G, body_t *body1,
+                              body_t *body2) {
+  list_t *bodies = list_init(2, NULL);
+  list_t *aux_bodies = list_init(2, NULL);
+  list_add(bodies, body1);
+  list_add(bodies, body2);
+  list_add(aux_bodies, body1);
+  list_add(aux_bodies, body2);
+  body_aux_t *aux = body_aux_init(G, aux_bodies);
+  scene_add_bodies_force_creator(scene, (force_creator_t)newtonian_gravity, aux,
+                                 bodies);
+}
+
+static void global_gravity(void *info) {
+  body_aux_t *aux = (body_aux_t *)info;
+  vector_t displacement =
+      vec_subtract(body_get_centroid(list_get(aux->bodies, 0)),
+                   body_get_centroid(list_get(aux->bodies, 1)));
+  vector_t unit_disp =
+      vec_multiply(1 / sqrt(vec_dot(displacement, displacement)), displacement);
+
+  double distance = sqrt(vec_dot(displacement, displacement));
+
+  if (distance > MIN_DIST) {
+    vector_t grav_force = vec_multiply(
+        aux->force_const * body_get_mass(list_get(aux->bodies, 0)) *
+            body_get_mass(list_get(aux->bodies, 1)) /
+            vec_dot(displacement, displacement),
+        unit_disp);
+
+    body_add_force(list_get(aux->bodies, 1), grav_force);
+    body_add_force(list_get(aux->bodies, 0), vec_multiply(-1, grav_force));
+  }
+}
+
 
 /**
  * The force creator for spring forces between objects. Calculates
