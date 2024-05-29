@@ -10,6 +10,7 @@
 #include "collision.h"
 #include "forces.h"
 #include "sdl_wrapper.h"
+#include "entities.h"
 
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
@@ -97,6 +98,7 @@ void add_bounds(state_t *state) {
   scene_add_body(state->scene, ceiling);
   scene_add_body(state->scene, ground);
 }
+
 void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
   /*TODO: edit with Space Wars implementation*/
   body_t *froggy = scene_get_body(state->scene, 0);
@@ -121,10 +123,6 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
     vector_t new_centroid = vec_add(body_get_centroid(froggy), translation);
     body_set_centroid(froggy, new_centroid);
   }
-}
-
-double rand_double(double low, double high) {
-  return (high - low) * rand() / RAND_MAX + low;
 }
 
 state_t *emscripten_init() {
@@ -165,7 +163,7 @@ void update_score(state_t *state) {
   if (!(p1 && p2)) {
     if (p1) {
       state->P1_score++;
-    } else {
+    } else if (p2) {
       state->P2_score++;
     }
   }
@@ -180,6 +178,15 @@ void render_scene(state_t *state, void *aux) {
 
 bool emscripten_main(state_t *state) {
   double dt = time_since_last_tick();
+
+  switch (state->mode) {
+    case HOME: {
+
+    }
+    case GAME: {
+
+    }
+  }
   scene_tick(state->scene, dt);
 
   update_score(state);
