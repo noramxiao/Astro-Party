@@ -40,6 +40,16 @@ typedef enum { KEY_PRESSED, KEY_RELEASED } key_event_type_t;
  */
 typedef void (*key_handler_t)(char key, key_event_type_t type, double held_time,
                               void *state);
+                              
+/**
+ * A click handler.
+ * When a mouse click is pressed or released, the handler is passed its char value.
+ *
+ * @param state a struct containing information about the environment
+ * @param x the x coord of the click
+ * @param held_time the y coord of the click
+ */
+typedef void (*click_handler_t)(void *state, double x, double y);
 
 /**
  * Initializes the SDL window and renderer.
@@ -165,6 +175,14 @@ void sdl_render_scene(scene_t *scene, void *aux);
  * @param handler the function to call with each key press
  */
 void sdl_on_key(key_handler_t handler);
+
+/**
+ * Registers a function to be called every time a mouse is clicked.
+ * Overwrites any existing handler.
+ *
+ * @param handler the function to call with each mouse click
+ */
+void sdl_on_click(click_handler_t handler);
 
 /**
  * Finds the smallest bounding box for a body
