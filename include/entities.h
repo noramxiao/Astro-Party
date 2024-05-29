@@ -10,6 +10,10 @@ typedef enum {
 	ASTEROID
 } entity_type_t;
 
+typedef struct entity_info {
+	entity_type_t type;
+} entity_info_t;
+
 /** 
  * Creates a body for a spaceship. Will just be an isosceles triangle for now.
  * 
