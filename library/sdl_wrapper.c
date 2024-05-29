@@ -32,6 +32,7 @@ SDL_Renderer *renderer;
  * The keypress handler, or NULL if none has been configured.
  */
 key_handler_t key_handler = NULL;
+click_handler_t click_handler = NULL;
 /**
  * SDL's timestamp when a key was last pressed or released.
  * Used to mesasure how long a key has been held.
@@ -142,6 +143,12 @@ bool sdl_is_done(void *state) {
           event->type == SDL_KEYDOWN ? KEY_PRESSED : KEY_RELEASED;
       double held_time = (timestamp - key_start_timestamp) / MS_PER_S;
       key_handler(key, type, held_time, state);
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      if (click_handler == NULL) {
+        break;
+      }
+      click_handler(state, event->motion.x, event->motion.y);
       break;
     }
   }
@@ -258,6 +265,7 @@ void sdl_render_scene(scene_t *scene, void *aux) {
 }
 
 void sdl_on_key(key_handler_t handler) { key_handler = handler; }
+void sdl_on_click(click_handler_t handler) { click_handler = handler; }
 
 SDL_Rect get_bounding_box(body_t *body) {
   double min_x = DBL_MAX;

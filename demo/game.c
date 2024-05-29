@@ -123,6 +123,13 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
   }
 }
 
+void on_click(state_t *state, double x, double y) {
+  switch (state->mode) {
+    case HOME:
+      
+  }
+}
+
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
@@ -141,6 +148,7 @@ state_t *emscripten_init() {
   list_add(state->body_assets, background_asset);
 
   sdl_on_key((key_handler_t)on_key);
+  sdl_on_click((click_handler_t)on_click);
   return state;
 }
 
