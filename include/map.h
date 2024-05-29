@@ -6,7 +6,7 @@
 #include "forces.h"
 #include "sdl_wrapper.h"
 
-typedef enum { ASTEROID, WALL, BACKGROUND, SHIP, BULLET} body_type_t;
+
 
 
 

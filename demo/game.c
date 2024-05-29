@@ -16,6 +16,15 @@ const vector_t MAX = {1000, 500};
 
 const double SHIP_MASS = 10.0;
 
+const double WALL_DIM = 1;
+
+const double USER_HEIGHT = 25;
+const vector_t USER_INIT_POS = {500, 25};
+
+
+
+rgb_color_t white = (rgb_color_t){1, 1, 1};
+
 enum Mode {
   HOME,
   GAME,

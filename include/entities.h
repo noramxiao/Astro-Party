@@ -7,7 +7,9 @@ typedef enum {
 	SHIP,
 	PILOT,
 	BULLET,
-	ASTEROID
+	ASTEROID,
+	WALL,
+	BACKGROUND
 } entity_type_t;
 
 /** 
