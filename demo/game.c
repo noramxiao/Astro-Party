@@ -305,29 +305,29 @@ void reset_game(body_t *body1, body_t *body2, vector_t axis, void *aux,
 
 
 void add_force_creators(state_t *state) {
-  for (size_t i = 0; i < scene_bodies(state->scene); i++) {
-    body_t *body = scene_get_body(state->scene, i);
-    switch (get_type(body)) {
-    case BRICK:
-      // TODO: register the collision handler that should run when the ball and
-      // the brick collides
-      create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
-      break;
-    case WALL:
-      // TODO: register the collision handler that should run when the ball and
-      // the wall collides
-      create_physics_collision(state->scene, state->ball, body, ELASTICITY);
+  // for (size_t i = 0; i < scene_bodies(state->scene); i++) {
+  //   body_t *body = scene_get_body(state->scene, i);
+  //   switch (get_type(body)) {
+  //   case BRICK:
+  //     // TODO: register the collision handler that should run when the ball and
+  //     // the brick collides
+  //     create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
+  //     break;
+  //   case WALL:
+  //     // TODO: register the collision handler that should run when the ball and
+  //     // the wall collides
+  //     create_physics_collision(state->scene, state->ball, body, ELASTICITY);
 
-      break;
-    case GROUND:
-      // TODO: register the collision handler that should run when the ball and
-      // the ground collides
-      create_collision(state->scene, state->ball, body, reset_game, state, 0);
-      break;
-    default:
-      break;
-    }
-  }
+  //     break;
+  //   case GROUND:
+  //     // TODO: register the collision handler that should run when the ball and
+  //     // the ground collides
+  //     create_collision(state->scene, state->ball, body, reset_game, state, 0);
+  //     break;
+  //   default:
+  //     break;
+  //   }
+  // }
 }
 
 void render_assets(list_t *assets) {
