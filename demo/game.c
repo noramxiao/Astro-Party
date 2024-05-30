@@ -151,7 +151,7 @@ void add_asteroids(state_t *state){
 
       for (size_t i = 0; i < n_bodies; i++) {
         body_t *body = scene_get_body(state->scene, i);
-        if(find_collision(body, asteroid)->collided){
+        if(find_collision(body, asteroid).collided){
           continue;
         }
       }
