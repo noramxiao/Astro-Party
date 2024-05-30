@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <SDL2/SDL.h>
 
 #include "asset.h"
 #include "asset_cache.h"
@@ -12,13 +13,14 @@
 #include "sdl_wrapper.h"
 #include "entities.h"
 #include "shapes.h"
+
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
 
 const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
-const char *TITLE_PATH = 'assets/title.png';
+const char *TITLE_PATH = "assets/title.png";
 
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
@@ -233,7 +235,7 @@ void create_buttons(state_t *state) {
 void home_init(state_t *state) {
   create_buttons(state);
 
-  asset_t *title = asset_make_image(TITLE_PATH, (SDL_RECT){100, 100, 500, 100});
+  asset_t *title = asset_make_image(TITLE_PATH, (SDL_Rect){100, 100, 500, 100});
   list_add(state->home_assets, title);
 }
 
