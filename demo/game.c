@@ -52,9 +52,12 @@ enum mode {
 typedef struct map {
   size_t num_blocks;
   size_t num_asteroids;
+  size_t num_blackholes;
   const char *bg_path;
   vector_t *block_locations;
   vector_t *block_sizes;
+  vector_t *blackhole_locations;
+  double *blackhole_masses;
   vector_t *start_pos;
 } map_t;
 
@@ -90,7 +93,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
-    .num_asteroids = 5,
+    .num_asteroids = 10,
     .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
@@ -261,18 +264,18 @@ void on_key(Uint8 *key_state, state_t *state) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p1);
     body_set_rotation(p1, curr_angle + da);
-    vector_t curr_velocity = body_get_velocity(p1);
-    vector_t new_velocity = vec_rotate(curr_velocity, da);
-    body_set_velocity(p1, new_velocity);
+    // vector_t curr_velocity = body_get_velocity(p1);
+    // vector_t new_velocity = vec_rotate(curr_velocity, da);
+    // body_set_velocity(p1, new_velocity);
   }
 
   if (key_state[SDL_SCANCODE_M]) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p2);
     body_set_rotation(p2, curr_angle + da);
-    vector_t curr_velocity = body_get_velocity(p2);
-    vector_t new_velocity = vec_rotate(curr_velocity, da);
-    body_set_velocity(p2, new_velocity);
+    // vector_t curr_velocity = body_get_velocity(p2);
+    // vector_t new_velocity = vec_rotate(curr_velocity, da);
+    // body_set_velocity(p2, new_velocity);
   }
 
   if (key_state[SDL_SCANCODE_Q]) {
@@ -396,6 +399,16 @@ void add_force_creators(state_t *state) {
         }
       }
       break;
+    case ASTEROID:
+      create_drag(state->scene, DRAG_COEF, body);
+      for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
+        body_t *body2 = scene_get_body(state->scene, j);
+        entity_type_t t = get_type(body2);
+        if(t == WALL || t == ASTEROID){
+          create_physics_collision(state->scene, body2, body, ELASTICITY);
+        }
+      }
+      break;
     default:
       break;
     }
@@ -479,7 +492,9 @@ bool emscripten_main(state_t *state) {
 
       sdl_clear();
       render_assets(state->game_assets);
-      sdl_render_scene(state->scene, NULL);
+      vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
+      sdl_render_scene_cam(state->scene, NULL, cam_center, MAX);
+      //sdl_render_scene(state->scene, NULL);
       render_scores(state);
       sdl_show();
 
@@ -491,6 +506,7 @@ bool emscripten_main(state_t *state) {
       break;
     }
   }
+
   return false;
 }
 

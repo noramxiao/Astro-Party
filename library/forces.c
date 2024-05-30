@@ -175,6 +175,9 @@ void create_thrust(scene_t *scene, double power, body_t *body) {
                                  bodies);
 }
 
+
+
+
 /**
  * The force creator for collisions. Checks if the bodies in the collision aux
  * are colliding, and if they do, runs the collision handler on the bodies.
