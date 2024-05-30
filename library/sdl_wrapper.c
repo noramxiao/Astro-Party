@@ -192,6 +192,32 @@ void sdl_draw_text(TTF_Font *font, const char *string, SDL_Color *forecol,
   SDL_RenderCopy(renderer, caption, NULL, &rect);
 }
 
+void sdl_draw_polygon_cam(polygon_t *poly, rgb_color_t color, vector_t cam_center, vector_t cam_size) {
+  list_t *points = polygon_get_points(poly);
+  // Check parameters
+  size_t n = list_size(points);
+  assert(n >= 3);
+
+  vector_t window_center = get_window_center();
+
+  // Convert each vertex to a point on screen
+  int16_t *x_points = malloc(sizeof(*x_points) * n),
+          *y_points = malloc(sizeof(*y_points) * n);
+  assert(x_points != NULL);
+  assert(y_points != NULL);
+  for (size_t i = 0; i < n; i++) {
+    vector_t *vertex = list_get(points, i);
+    vector_t pixel = get_window_position(*vertex, window_center);
+    x_points[i] = (pixel.x - cam_center.x + cam_size.x/2)*WINDOW_WIDTH/cam_size.x;
+    y_points[i] = (pixel.y + cam_center.y - cam_size.y/2)*WINDOW_HEIGHT/cam_size.y;
+  }
+
+  // Draw polygon with the given color
+  filledPolygonRGBA(renderer, x_points, y_points, n, color.r * 255,
+                    color.g * 255, color.b * 255, 255);
+  free(x_points);
+  free(y_points);
+}
 void sdl_draw_polygon(polygon_t *poly, rgb_color_t color) {
   list_t *points = polygon_get_points(poly);
   // Check parameters
@@ -246,6 +272,23 @@ void sdl_render_scene(scene_t *scene, void *aux) {
     list_t *shape = body_get_shape(body);
     polygon_t *poly = polygon_init(shape, (vector_t){0, 0}, 0, 0, 0, 0);
     sdl_draw_polygon(poly, *body_get_color(body));
+    list_free(shape);
+  }
+  if (aux != NULL) {
+    body_t *body = aux;
+    sdl_draw_polygon(body_get_polygon(body), *body_get_color(body));
+  }
+  sdl_show();
+}
+
+void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector_t cam_size) {
+  sdl_clear();
+  size_t body_count = scene_bodies(scene);
+  for (size_t i = 0; i < body_count; i++) {
+    body_t *body = scene_get_body(scene, i);
+    list_t *shape = body_get_shape(body);
+    polygon_t *poly = polygon_init(shape, (vector_t){0, 0}, 0, 0, 0, 0);
+    sdl_draw_polygon_cam(poly, *body_get_color(body), cam_center, cam_size);
     list_free(shape);
   }
   if (aux != NULL) {

@@ -11,6 +11,7 @@
 // color constants
 const rgb_color_t RED = (rgb_color_t) {.r = 1, .g = 0, .b = 0}; 
 const rgb_color_t BLUE = (rgb_color_t) {.r = 0, .g = 0, .b = 1}; 
+const rgb_color_t PURPLE = (rgb_color_t) {.r = 0.6, .g = 0.1, .b = 1}; 
 const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
 const rgb_color_t GRAY = (rgb_color_t) {.r = 0.5, .g = 0.5, .b = 0.5};
 
@@ -24,8 +25,10 @@ const double PILOT_MASS = 5;
 const vector_t PILOT_RECT_DIMS = (vector_t) {.x = 10, .y = 20};
 const double PILOT_CIRC_RAD = 15;
 
+const double BLACKHOLE_CIRC_RAD = 10;
+
 // asteroid constants
-const double ASTEROID_MASS_DENSITY = 1;
+const double ASTEROID_MASS_DENSITY = 0.1;
 
 entity_info_t *entity_info_init(entity_type_t type, size_t player_idx) {
 	entity_info_t *ret = malloc(sizeof(entity_info_t));
@@ -78,5 +81,14 @@ body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity) 
 	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, (free_func_t)entity_info_free);
 	body_set_centroid(ret, centroid);
 	body_set_velocity(ret, init_velocity);
+	return ret;
+}
+
+body_t *make_blackhole(vector_t centroid, double mass) {
+	list_t *blackhole = make_circle(centroid, BLACKHOLE_CIRC_RAD);
+	entity_info_t *blackhole_info = entity_info_init(BLACKHOLE, 100);
+	body_t *ret = body_init_with_info(blackhole, mass, PURPLE, blackhole_info, (free_func_t)entity_info_free);
+	body_set_centroid(ret, centroid);
+	body_set_velocity(ret, (vector_t){0, 0});
 	return ret;
 }

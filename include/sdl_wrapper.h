@@ -146,6 +146,7 @@ void sdl_show(void);
  * @param aux an additional body to draw (can be NULL if no additional bodies)
  */
 void sdl_render_scene(scene_t *scene, void *aux);
+void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector_t cam_size);
 
 /**
  * Registers a function to be called every time a key is pressed.

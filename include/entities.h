@@ -12,7 +12,8 @@ typedef enum {
 	BULLET,
 	ASTEROID,
 	WALL,
-	BACKGROUND
+	BACKGROUND,
+	BLACKHOLE
 } entity_type_t;
 
 typedef struct entity_info {
@@ -55,5 +56,7 @@ body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, doub
  * @return a pointer to the asteroid body
 */
 body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity);
+
+body_t *make_blackhole(vector_t centroid, double mass);
 
 #endif

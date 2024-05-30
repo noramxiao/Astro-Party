@@ -40,9 +40,9 @@ const double PLAYER_ROT_SPEED = -3 * M_PI;
 
 const double WALL_DIM = 1;
 const double ELASTICITY = 1;
-const double THRUST_POWER = 50;
+const double THRUST_POWER = 70;
 const double DRAG_COEF = 1;
-
+const double G = 1;
 rgb_color_t white = (rgb_color_t){0, 1, 1};
 
 enum mode {
@@ -54,9 +54,12 @@ enum mode {
 typedef struct map {
   size_t num_blocks;
   size_t num_asteroids;
+  size_t num_blackholes;
   const char *bg_path;
   vector_t *block_locations;
   vector_t *block_sizes;
+  vector_t *blackhole_locations;
+  double *blackhole_masses;
   vector_t *start_pos;
 } map_t;
 
@@ -92,7 +95,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
-    .num_asteroids = 5,
+    .num_asteroids = 10,
     .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
@@ -206,26 +209,24 @@ void on_key(Uint8 *key_state, state_t *state) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p1);
     body_set_rotation(p1, curr_angle + da);
-    vector_t curr_velocity = body_get_velocity(p1);
-    vector_t new_velocity = vec_rotate(curr_velocity, da);
-    body_set_velocity(p1, new_velocity);
+    // vector_t curr_velocity = body_get_velocity(p1);
+    // vector_t new_velocity = vec_rotate(curr_velocity, da);
+    // body_set_velocity(p1, new_velocity);
   }
 
   if (key_state[SDL_SCANCODE_M]) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p2);
     body_set_rotation(p2, curr_angle + da);
-    vector_t curr_velocity = body_get_velocity(p2);
-    vector_t new_velocity = vec_rotate(curr_velocity, da);
-    body_set_velocity(p2, new_velocity);
+    // vector_t curr_velocity = body_get_velocity(p2);
+    // vector_t new_velocity = vec_rotate(curr_velocity, da);
+    // body_set_velocity(p2, new_velocity);
   }
 }
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
-  init_map(state);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
+
 }
 
 void handle_buttons(state_t *state, double x, double y) {
@@ -380,6 +381,16 @@ void add_force_creators(state_t *state) {
         }
       }
       break;
+    case ASTEROID:
+      create_drag(state->scene, DRAG_COEF, body);
+      for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
+        body_t *body2 = scene_get_body(state->scene, j);
+        entity_type_t t = get_type(body2);
+        if(t == WALL || t == ASTEROID){
+          create_physics_collision(state->scene, body2, body, ELASTICITY);
+        }
+      }
+      break;
     default:
       break;
     }
@@ -399,7 +410,7 @@ state_t *emscripten_init() {
   
   srand(time(NULL));
   state_t *state = malloc(sizeof(state_t));
-  state->mode = GAME;
+  state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
@@ -407,7 +418,7 @@ state_t *emscripten_init() {
   state->map = maps[0];
   state->scene = scene_init();
   
-  //home_init(state);
+  home_init(state);
   init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
@@ -425,6 +436,7 @@ bool emscripten_main(state_t *state) {
   switch (state->mode) {
     case HOME: {
       render_assets(state->home_assets);
+      sdl_show();
       break;
     }
     case GAME: {
@@ -436,7 +448,9 @@ bool emscripten_main(state_t *state) {
       if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
 
       render_assets(state->game_assets);
-      sdl_render_scene(state->scene, NULL);
+      vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
+      sdl_render_scene_cam(state->scene, NULL, cam_center, MAX);
+      //sdl_render_scene(state->scene, NULL);
       state->dt = dt;
       sdl_is_done(state);
       break;
@@ -445,6 +459,7 @@ bool emscripten_main(state_t *state) {
       break;
     }
   }
+
   return false;
 }
 
