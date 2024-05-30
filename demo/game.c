@@ -453,7 +453,7 @@ void render_scores(state_t *state) {
 
 vector_t calc_cam_size(state_t *state){
   vector_t diff = vec_subtract(body_get_centroid(state->player1), body_get_centroid(state->player2));
-  diff.x = max(fabs(diff.x) * 1.3, 100);
+  diff.x = fmax(fabs(diff.x) * 1.3, 100);
   diff.y = fabs(diff.y) * 1.3;
   if(diff.x > 2*diff.y){
     return (vector_t) {diff.x, diff.x/2};
