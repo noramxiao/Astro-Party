@@ -68,6 +68,7 @@ void create_spring(scene_t *scene, double k, body_t *body1, body_t *body2);
  * @param body the body to slow down
  */
 void create_drag(scene_t *scene, double gamma, body_t *body);
+void create_thrust(scene_t *scene, double power, body_t *body);
 
 /**
  * Adds a force creator to a scene that calls a given collision handler

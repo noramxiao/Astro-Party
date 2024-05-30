@@ -25,8 +25,11 @@ const size_t SCORE_HEIGHT = 75; // height of entire score bar
 const vector_t VEC_ZERO = (vector_t){.x = 0.0, .y = 0.0};
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
+const double ELASTICITY = 0.2;
+const double THRUST_POWER = 10;
+const double DRAG_COEF = 0.2;
 
-rgb_color_t white = (rgb_color_t){1, 1, 1};
+rgb_color_t white = (rgb_color_t){0, 1, 1};
 
 enum mode {
   HOME,
@@ -123,19 +126,26 @@ void add_bounds(state_t *state) {
  *
  * @param state the state
  * @param map the map
- */
-void init_map(state_t *state, map_t map){
-  add_ship(state, map.start_pos[0], 0);
-  add_ship(state, map.start_pos[1], 1);
+ */    
 
-
+void add_obstacles(state_t *state){
   add_bounds(state);
-  for(size_t i = 0; i < map.num_blocks; i++){
-    list_t *block_shape = make_rectangle(map.block_locations[i], map.block_sizes[i].x, map.block_sizes[i].y);
+  for(size_t i = 0; i < state->map.num_blocks; i++){
+    list_t *block_shape = make_rectangle(state->map.block_locations[i], state->map.block_sizes[i].x, state->map.block_sizes[i].y);
     body_t *block = body_init_with_info(block_shape, INFINITY, white,
                                       entity_info_init(WALL, 100), free);
     scene_add_body(state->scene, block);
   }
+}
+
+void init_map(state_t *state){
+  map_t map = state->map;
+
+  add_ship(state, map.start_pos[0], 0);
+  add_ship(state, map.start_pos[1], 1);
+
+
+  add_obstacles(state);
 
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
@@ -172,7 +182,7 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
-  init_map(state, state->map);
+  init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
 }
@@ -267,75 +277,67 @@ bool update_score(state_t *state) {
 
 }
 
-void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
-                double force_const) {
+
+
+void reset_game(state_t *state) {
+
+  // clear and re-add bricks. Which function initializes bricks in the
+  // beginning of the game?
+  size_t n_bodies = scene_bodies(state->scene);
+
+  for (size_t i = 0; i < n_bodies; i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    if (get_type(body) == BULLET) {
+      body_remove(body);
+    }
+  }
   
 
+
+  // reset players's velocity and position
+  body_set_centroid(state->player1, state->map.start_pos[0]);
+  body_set_velocity(state->player1, (vector_t) {0, 0});
+  body_set_centroid(state->player2, state->map.start_pos[1]);
+  body_set_velocity(state->player2, (vector_t) {0, 0});
+
+  // reset players's forces and impulses
+  body_reset(state->player1);
+  body_reset(state->player2);
+
 }
 
-void reset_game(body_t *body1, body_t *body2, vector_t axis, void *aux,
+void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
                 double force_const) {
-  // // When reset_game was "registered" as a collision handler, the game state
-  // // should have been passed in as the aux. This gives us access to the
-  // // state after the collision between the ball and the ground, allowing us
-  // // to reset the game.
-  // state_t *state = aux;
-
-  // // clear and re-add bricks. Which function initializes bricks in the
-  // // beginning of the game?
-  // size_t n_bodies = scene_bodies(state->scene);
-
-  // for (size_t i = 0; i < n_bodies; i++) {
-  //   body_t *body = scene_get_body(state->scene, i);
-  //   if (get_type(body) == BRICK) {
-  //     body_remove(body);
-  //   }
-  // }
-  // add_bricks(state);
-
-  // // reset ball's velocity and position
-  // body_set_centroid(state->ball, BALL_INIT_POS);
-  // body_set_velocity(state->ball, BALL_INIT_VEL);
-
-  // // reset ball's forces and impulses
-  // body_reset(state->ball);
-
-  // // re-add force creators for bricks
-  // n_bodies = scene_bodies(state->scene);
-
-  // for (size_t i = 0; i < n_bodies; i++) {
-  //   body_t *body = scene_get_body(state->scene, i);
-  //   if (get_type(body) == BRICK) {
-  //     create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
-  //   }
-  // }
+  state_t *state = aux;
+  entity_info_t *bullet_info = body_get_info(body2);
+  if(bullet_info->team == 0){
+    state->P1_score++;
+  }
+  if(bullet_info->team == 1){
+    state->P2_score++;
+  }
+  reset_game(state);
 }
-
 
 void add_force_creators(state_t *state) {
-  // for (size_t i = 0; i < scene_bodies(state->scene); i++) {
-  //   body_t *body = scene_get_body(state->scene, i);
-  //   switch (get_type(body)) {
-  //   case BRICK:
-  //     // TODO: register the collision handler that should run when the ball and
-  //     // the brick collides
-  //     create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
-  //     break;
-  //   case WALL:
-  //     // TODO: register the collision handler that should run when the ball and
-  //     // the wall collides
-  //     create_physics_collision(state->scene, state->ball, body, ELASTICITY);
-
-  //     break;
-  //   case GROUND:
-  //     // TODO: register the collision handler that should run when the ball and
-  //     // the ground collides
-  //     create_collision(state->scene, state->ball, body, reset_game, state, 0);
-  //     break;
-  //   default:
-  //     break;
-  //   }
-  // }
+  for (size_t i = 0; i < scene_bodies(state->scene); i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    switch (get_type(body)) {
+    case SHIP:
+      create_thrust(state->scene, THRUST_POWER, body);
+      create_drag(state->scene, DRAG_COEF, body);
+      for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
+        body_t *body2 = scene_get_body(state->scene, j);
+        entity_type_t t = get_type(body2);
+        if(t == SHIP || t == WALL || t == ASTEROID){
+          create_physics_collision(state->scene, body2, body, ELASTICITY);
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
 }
 
 void render_assets(list_t *assets) {
@@ -375,6 +377,7 @@ void render_scores(state_t *state) {
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
+  
   srand(time(NULL));
   state_t *state = malloc(sizeof(state_t));
   state->mode = GAME;
@@ -384,12 +387,17 @@ state_t *emscripten_init() {
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
+  
   //home_init(state);
-  init_map(state, state->map);
+  init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
+
+  
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
+  add_force_creators(state);
+  
   printf("Finished init\n");
   return state;
 }

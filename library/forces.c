@@ -156,6 +156,25 @@ void create_drag(scene_t *scene, double gamma, body_t *body) {
                                  bodies);
 }
 
+static void thrust_force(void *info) {
+  body_aux_t *aux = (body_aux_t *)info;
+  body_t *body = list_get(aux->bodies, 0);
+  vector_t dir = (vector_t){-sin(body_get_rotation(body)), cos(body_get_rotation(body))};
+  vector_t thrust = vec_multiply(aux->force_const, dir);
+
+  body_add_force(body, thrust);
+}
+
+void create_thrust(scene_t *scene, double power, body_t *body) {
+  list_t *bodies = list_init(1, NULL);
+  list_t *aux_bodies = list_init(1, NULL);
+  list_add(bodies, body);
+  list_add(aux_bodies, body);
+  body_aux_t *aux = body_aux_init(power, aux_bodies);
+  scene_add_bodies_force_creator(scene, (force_creator_t)thrust_force, aux,
+                                 bodies);
+}
+
 /**
  * The force creator for collisions. Checks if the bodies in the collision aux
  * are colliding, and if they do, runs the collision handler on the bodies.

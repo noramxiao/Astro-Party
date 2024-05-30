@@ -25,8 +25,13 @@ entity_info_t *entity_info_init(entity_type_t type, size_t player_idx) {
 	entity_info_t *ret = malloc(sizeof(entity_info_t));
 	assert(ret);
 	ret->type = type;
-	ret->player = player_idx;
+	ret->team = player_idx;
 	return ret;
+}
+
+size_t get_team(body_t *body) {
+	entity_info_t *info = body_get_info(body);
+  return info->team;
 }
 
 void entity_info_free(entity_info_t *info) {
