@@ -19,8 +19,6 @@ const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 
-const double SHIP_MASS = 10.0;
-const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 
 rgb_color_t white = (rgb_color_t){1, 1, 1};
@@ -87,40 +85,6 @@ button_info_t button_templates[] = {
      .image_box = (SDL_Rect){0, 200, 100, 100},
      .handler = (void *)toggle_play},
 };
-
-
-
-/** Make a rectangle-shaped body object.
- *
- * @param center a vector representing the center of the body.
- * @param width the width of the rectangle
- * @param height the height of the rectangle
- * @return pointer to the rectangle-shaped body
- */
-list_t *make_rectangle(vector_t center, double width, double height) {
-  list_t *points = list_init(4, free);
-  vector_t *p1 = malloc(sizeof(vector_t));
-  *p1 = (vector_t){center.x - width / 2, center.y - height / 2};
-
-  vector_t *p2 = malloc(sizeof(vector_t));
-  *p2 = (vector_t){center.x + width / 2, center.y - height / 2};
-
-  vector_t *p3 = malloc(sizeof(vector_t));
-  *p3 = (vector_t){center.x + width / 2, center.y + height / 2};
-
-  vector_t *p4 = malloc(sizeof(vector_t));
-  *p4 = (vector_t){center.x - width / 2, center.y + height / 2};
-
-  list_add(points, p1);
-  list_add(points, p2);
-  list_add(points, p3);
-  list_add(points, p4);
-
-  return points;
-}
-
-
-
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
   body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
