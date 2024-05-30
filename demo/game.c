@@ -11,6 +11,7 @@
 #include "forces.h"
 #include "sdl_wrapper.h"
 #include "entities.h"
+#include "shapes.h"
 
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
