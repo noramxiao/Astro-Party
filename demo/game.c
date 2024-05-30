@@ -457,6 +457,8 @@ void render_assets(list_t *assets) {
   }
 }
 
+
+
 /** 
  * Renders score as a progress bar at the top of the screen.
 */
@@ -482,6 +484,18 @@ void render_scores(state_t *state) {
   polygon_t *rectangle_2 = polygon_init(rectangle_pts_2, VEC_ZERO, 0.0, p2_color.r, 
                                       p2_color.g, p2_color.b);
   sdl_draw_polygon(rectangle_2, p2_color);
+}
+
+vector_t calc_cam_size(state_t *state){
+  vector_t diff = vec_subtract(body_get_centroid(state->player1), body_get_centroid(state->player2));
+  diff.x = max(fabs(diff.x) * 1.3, 100);
+  diff.y = fabs(diff.y) * 1.3;
+  if(diff.x > 2*diff.y){
+    return (vector_t) {diff.x, diff.x/2};
+  }
+  else{
+    return (vector_t) {2*diff.y, diff.y};
+  }
 }
 
 state_t *emscripten_init() {
@@ -531,7 +545,7 @@ bool emscripten_main(state_t *state) {
       sdl_clear();
       render_assets(state->game_assets);
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
-      sdl_render_scene_cam(state->scene, NULL, cam_center, MAX);
+      sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
       //sdl_render_scene(state->scene, NULL);
       render_scores(state);
       sdl_show();
