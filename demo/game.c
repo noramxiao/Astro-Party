@@ -19,7 +19,6 @@ const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 
-const double SHIP_MASS = 10.0;
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 
