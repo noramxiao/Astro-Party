@@ -13,7 +13,7 @@ const rgb_color_t RED = (rgb_color_t) {.r = 1, .g = 0, .b = 0};
 const rgb_color_t BLUE = (rgb_color_t) {.r = 0, .g = 0, .b = 1}; 
 const rgb_color_t PURPLE = (rgb_color_t) {.r = 0.6, .g = 0.1, .b = 1}; 
 const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
-const rgb_color_t GRAY = (rgb_color_t) {.r = 150, .g = 150, .b = 150};
+const rgb_color_t GRAY = (rgb_color_t) {.r = 0.5, .g = 0.5, .b = 0.5};
 
 // ship constants
 const double SHIP_MASS = 10;

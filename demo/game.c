@@ -24,21 +24,22 @@ const char *TITLE_PATH = "assets/title.png";
 const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
 const size_t SCORE_HEIGHT = 75; // height of entire score bar
 
-const double INIT_SHIP_SPEED = 100;
+const double INIT_SHIP_SPEED = 0;
 const double INIT_SHIP_ANGLES[] = {
   M_PI / 4, 
   5 * M_PI / 4, 
   7 * M_PI / 4,
   3 * M_PI / 4
 };
-const double PLAYER_ROT_SPEED = -2.5 * M_PI;
+const double PLAYER_ROT_SPEED = -3 * M_PI;
 
-const double INIT_BULLET_SPEED = 300;
+const double INIT_BULLET_SPEED = 500;
 
 const double WALL_DIM = 1;
+
 const double ELASTICITY = 1;
-const double THRUST_POWER = 300;
-const double DRAG_COEF = 4;
+const double THRUST_POWER = 500;
+const double DRAG_COEF = 5;
 
 const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
 
@@ -113,8 +114,6 @@ button_info_t button_templates[] = {
      .handler = (void *)toggle_play},
 };
 
-
-
 void add_ship(state_t *state, vector_t pos, size_t team) {
   vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
   body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team]);
@@ -142,7 +141,6 @@ void reset_game(state_t *state) {
   // reset players's forces and impulses
   body_reset(state->player1);
   body_reset(state->player2);
-
 }
 
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
@@ -169,10 +167,9 @@ void add_bullet(state_t *state, body_t *ship) {
     if (body == bullet) {
       continue;
     }
-    entity_info_t *info = body_get_info(body);
-    if (info->type == BULLET || info->type == ASTEROID) {
+    if (get_type(body) == BULLET || get_type(body) == ASTEROID) {
       create_destructive_collision(scene, body, bullet);
-    } else if (info->type == SHIP) {
+    } else if (get_type(body) == SHIP) {
       create_collision(scene, body, bullet, (collision_handler_t) score_hit, state, ELASTICITY);
     }
   }
@@ -246,10 +243,9 @@ void init_map(state_t *state){
   add_ship(state, map.start_pos[0], 0);
   add_ship(state, map.start_pos[1], 1);
 
-
   add_obstacles(state);
-
   add_asteroids(state);
+
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
   asset_t *background_asset =
@@ -468,6 +464,9 @@ state_t *emscripten_init() {
   state->scene = scene_init();
   
   home_init(state);
+  init_map(state);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
   init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
