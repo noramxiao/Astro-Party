@@ -164,7 +164,7 @@ void init_map(state_t *state, map_t map){
   for(size_t i = 0; i < map.num_blocks; i++){
     list_t *block_shape = make_rectangle(map.block_locations[i], map.block_sizes[i].x, map.block_sizes[i].y);
     body_t *block = body_init_with_info(block_shape, INFINITY, white,
-                                      entity_info_init(WALL), free);
+                                      entity_info_init(WALL, -1), free);
     scene_add_body(state->scene, block);
   }
 
