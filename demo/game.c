@@ -236,7 +236,7 @@ void home_init(state_t *state) {
   create_buttons(state);
 }
 
-// bool update_score(state_t *state) {
+bool update_score(state_t *state) {
 //   bool p1 = false;
 //   bool p2 = false;
 //   size_t n_bodies = scene_bodies(state->scene);
@@ -257,7 +257,7 @@ void home_init(state_t *state) {
 //     }
 //   }
 //   return false;
-// }
+}
 
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
                 double force_const) {
