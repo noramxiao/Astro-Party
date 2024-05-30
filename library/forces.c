@@ -80,6 +80,7 @@ static void newtonian_gravity(void *info) {
   }
 }
 
+
 void create_newtonian_gravity(scene_t *scene, double G, body_t *body1,
                               body_t *body2) {
   list_t *bodies = list_init(2, NULL);
@@ -92,6 +93,8 @@ void create_newtonian_gravity(scene_t *scene, double G, body_t *body1,
   scene_add_bodies_force_creator(scene, (force_creator_t)newtonian_gravity, aux,
                                  bodies);
 }
+
+
 
 /**
  * The force creator for spring forces between objects. Calculates
