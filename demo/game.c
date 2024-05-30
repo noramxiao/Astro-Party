@@ -22,7 +22,7 @@ const size_t N_PLAYERS = 2;
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 
-rgb_color_t white = (rgb_color_t){0, 0, 1};
+rgb_color_t white = (rgb_color_t){1, 1, 1};
 
 enum mode {
   HOME,
@@ -350,8 +350,10 @@ state_t *emscripten_init() {
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
-  home_init(state);
-
+  //home_init(state);
+  init_map(state, state->map);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
   printf("Finished init\n");
