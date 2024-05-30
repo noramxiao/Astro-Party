@@ -65,7 +65,7 @@ body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity) 
 	list_t *asteroid = make_circle(centroid, radius);
 	entity_info_t *asteroid_info = entity_info_init(ASTEROID, 69);
 	double mass = radius * radius * ASTEROID_MASS_DENSITY;
-	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, entity_info_free);
+	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, (free_func_t) entity_info_free);
 	body_set_centroid(ret, centroid);
 	return ret;
 }
