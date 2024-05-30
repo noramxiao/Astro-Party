@@ -9,14 +9,15 @@
 #include "vector.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdbool.h>
 
 // Values passed to a key handler when the given arrow key is pressed
 typedef enum {
-  P1_TURN = 1,
-  P1_SHOOT = 2,
-  P2_TURN = 3,
-  P2_SHOOT = 4,
+  P1_TURN = SDL_SCANCODE_W,
+  P1_SHOOT = SDL_SCANCODE_Q,
+  P2_TURN = SDL_SCANCODE_M,
+  P2_SHOOT = SDL_SCANCODE_N,
 } player_key_t;
 
 /**
@@ -183,6 +184,41 @@ void sdl_on_key(key_handler_t handler);
  * @param handler the function to call with each mouse click
  */
 void sdl_on_click(click_handler_t handler);
+
+/**
+ * Returns last time key was pressed
+ * 
+ * @param key key to check
+*/
+double get_last_press(player_key_t key);
+
+/**
+ * Sets last time key was pressed
+ * 
+ * @param key key to check
+*/
+void set_last_press(player_key_t key);
+
+/**
+ * Returns last time key was released
+ * 
+ * @param key key to check
+*/
+double get_last_release(player_key_t key);
+
+/**
+ * Sets last time key was released
+ * 
+ * @param key key to check
+*/
+void set_last_release(player_key_t key);
+
+/**
+ * Play a sound
+ * 
+ * @param sound sound to play
+*/
+void sdl_play_sound(Mix_Chunk *sound);
 
 /**
  * Finds the smallest bounding box for a body
