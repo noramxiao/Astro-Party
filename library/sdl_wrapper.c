@@ -209,7 +209,7 @@ void sdl_draw_polygon_cam(polygon_t *poly, rgb_color_t color, vector_t cam_cente
     vector_t *vertex = list_get(points, i);
     vector_t pixel = get_window_position(*vertex, window_center);
     x_points[i] = (pixel.x - cam_center.x + cam_size.x/2)*WINDOW_WIDTH/cam_size.x;
-    y_points[i] = (pixel.y + cam_center.y - cam_size.y/2)*WINDOW_HEIGHT/cam_size.y;
+    y_points[i] = (pixel.y + cam_center.y - WINDOW_HEIGHT + cam_size.y/2)*WINDOW_HEIGHT/cam_size.y;
   }
 
   // Draw polygon with the given color

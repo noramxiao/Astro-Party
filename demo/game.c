@@ -422,6 +422,8 @@ void render_assets(list_t *assets) {
   }
 }
 
+
+
 /** 
  * Renders score as a progress bar at the top of the screen.
 */
@@ -449,6 +451,18 @@ void render_scores(state_t *state) {
   sdl_draw_polygon(rectangle_2, p2_color);
 }
 
+vector_t calc_cam_size(state_t *state){
+  vector_t diff = vec_subtract(body_get_centroid(state->player1), body_get_centroid(state->player2));
+  diff.x = max(fabs(diff.x) * 1.3, 100);
+  diff.y = fabs(diff.y) * 1.3;
+  if(diff.x > 2*diff.y){
+    return (vector_t) {diff.x, diff.x/2};
+  }
+  else{
+    return (vector_t) {2*diff.y, diff.y};
+  }
+}
+
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
@@ -464,9 +478,6 @@ state_t *emscripten_init() {
   state->scene = scene_init();
   
   home_init(state);
-  init_map(state);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
   init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
@@ -496,7 +507,7 @@ bool emscripten_main(state_t *state) {
       sdl_clear();
       render_assets(state->game_assets);
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
-      sdl_render_scene_cam(state->scene, NULL, cam_center, MAX);
+      sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
       //sdl_render_scene(state->scene, NULL);
       render_scores(state);
       sdl_show();
