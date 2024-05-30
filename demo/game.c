@@ -328,7 +328,7 @@ void add_force_creators(state_t *state) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
         if(t == SHIP || t == WALL || t == ASTEROID){
-          create_physics_collision(state->scene, state->ball, body, ELASTICITY);
+          create_physics_collision(state->scene, body2, body, ELASTICITY);
         }
       }
       break;
