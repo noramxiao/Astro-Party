@@ -218,6 +218,8 @@ asset_t *create_button_from_info(state_t *state, button_info_t info) {
   return button;
 }
 
+
+
 /**
  * Initializes and stores the button assets in the state.
  */
@@ -228,10 +230,112 @@ void create_buttons(state_t *state) {
     asset_t *button = create_button_from_info(state, info);
     list_add(state->home_assets, button);
   }
+
 }
 
 void home_init(state_t *state) {
   create_buttons(state);
+}
+
+// bool update_score(state_t *state) {
+//   bool p1 = false;
+//   bool p2 = false;
+//   size_t n_bodies = scene_bodies(state->scene);
+
+//   entity_type_t t1 = get_type(state->player1);
+//   entity_type_t t2 = get_type(state->player2);
+
+//   p1 = t1 == SHIP || t1 == PILOT;
+//   p2 = t2 == SHIP || t2 == PILOT;
+
+//   if (!(p1 && p2)) {
+//     if (p1) {
+//       state->P1_score++;
+//       return true;
+//     } else if (p2) {
+//       state->P2_score++;
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+
+void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
+                double force_const) {
+  
+
+}
+
+void reset_game(body_t *body1, body_t *body2, vector_t axis, void *aux,
+                double force_const) {
+  // When reset_game was "registered" as a collision handler, the game state
+  // should have been passed in as the aux. This gives us access to the
+  // state after the collision between the ball and the ground, allowing us
+  // to reset the game.
+  state_t *state = aux;
+
+  // clear and re-add bricks. Which function initializes bricks in the
+  // beginning of the game?
+  size_t n_bodies = scene_bodies(state->scene);
+
+  for (size_t i = 0; i < n_bodies; i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    if (get_type(body) == BRICK) {
+      body_remove(body);
+    }
+  }
+  add_bricks(state);
+
+  // reset ball's velocity and position
+  body_set_centroid(state->ball, BALL_INIT_POS);
+  body_set_velocity(state->ball, BALL_INIT_VEL);
+
+  // reset ball's forces and impulses
+  body_reset(state->ball);
+
+  // re-add force creators for bricks
+  n_bodies = scene_bodies(state->scene);
+
+  for (size_t i = 0; i < n_bodies; i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    if (get_type(body) == BRICK) {
+      create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
+    }
+  }
+}
+
+
+void add_force_creators(state_t *state) {
+  for (size_t i = 0; i < scene_bodies(state->scene); i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    switch (get_type(body)) {
+    case BRICK:
+      // TODO: register the collision handler that should run when the ball and
+      // the brick collides
+      create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
+      break;
+    case WALL:
+      // TODO: register the collision handler that should run when the ball and
+      // the wall collides
+      create_physics_collision(state->scene, state->ball, body, ELASTICITY);
+
+      break;
+    case GROUND:
+      // TODO: register the collision handler that should run when the ball and
+      // the ground collides
+      create_collision(state->scene, state->ball, body, reset_game, state, 0);
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+void render_assets(list_t *assets) {
+  size_t n_assets = list_size(assets);
+  for (size_t i = 0; i < n_assets; i++) {
+    asset_render(list_get(assets, i));
+  }
 }
 
 state_t *emscripten_init() {
@@ -256,36 +360,6 @@ state_t *emscripten_init() {
   return state;
 }
 
-void update_score(state_t *state) {
-  bool p1 = false;
-  bool p2 = false;
-  size_t n_bodies = scene_bodies(state->scene);
-
-  
-  // for (size_t i = 0; i < n_bodies; i++) {
-  //   void *info = body_get_info(scene_get_body(state->scene, i));
-  //   if (info == P1_SHIP || info == P1_PILOT) {
-  //     p1 = true;
-  //   } else if (info == P2_SHIP || info == P2_PILOT) {
-  //     p2 = true;
-  //   }
-  // }
-
-  if (!(p1 && p2)) {
-    if (p1) {
-      state->P1_score++;
-    } else if (p2) {
-      state->P2_score++;
-    }
-  }
-}
-
-void render_assets(list_t *assets) {
-  size_t n_assets = list_size(assets);
-  for (size_t i = 0; i < n_assets; i++) {
-    asset_render(list_get(assets, i));
-  }
-}
 
 bool emscripten_main(state_t *state) {
   double dt = time_since_last_tick();
