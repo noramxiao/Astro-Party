@@ -176,29 +176,29 @@ void init_map(state_t *state, map_t map){
 }
 
 void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
-  /*TODO: edit with Space Wars implementation*/
-  body_t *froggy = scene_get_body(state->scene, 0);
-  vector_t translation = (vector_t){0, 0};
-  if (type == KEY_PRESSED && type != KEY_RELEASED) {
-    switch (key) {
-    case P1_TURN:
-      translation.x = -H_STEP;
-      break;
-    case RIGHT_ARROW:
-      translation.x = H_STEP;
-      break;
-    case UP_ARROW:
-      translation.y = V_STEP;
-      break;
-    case DOWN_ARROW:
-      if (body_get_centroid(froggy).y > START_POS.y) {
-        translation.y = -V_STEP;
-      }
-      break;
-    }
-    vector_t new_centroid = vec_add(body_get_centroid(froggy), translation);
-    body_set_centroid(froggy, new_centroid);
-  }
+  // /*TODO: edit with Space Wars implementation*/
+  // body_t *froggy = scene_get_body(state->scene, 0);
+  // vector_t translation = (vector_t){0, 0};
+  // if (type == KEY_PRESSED && type != KEY_RELEASED) {
+  //   switch (key) {
+  //   case P1_TURN:
+  //     translation.x = -H_STEP;
+  //     break;
+  //   case RIGHT_ARROW:
+  //     translation.x = H_STEP;
+  //     break;
+  //   case UP_ARROW:
+  //     translation.y = V_STEP;
+  //     break;
+  //   case DOWN_ARROW:
+  //     if (body_get_centroid(froggy).y > START_POS.y) {
+  //       translation.y = -V_STEP;
+  //     }
+  //     break;
+  //   }
+  //   vector_t new_centroid = vec_add(body_get_centroid(froggy), translation);
+  //   body_set_centroid(froggy, new_centroid);
+  // }
 }
 
 void toggle_play(state_t *state) {
