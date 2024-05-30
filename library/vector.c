@@ -59,3 +59,9 @@ vector_t vec_project(vector_t v1, vector_t v2) {
   vector_t ret = vec_multiply(dot / (length * length), v2);
   return ret;
 }
+
+vector_t vec_make(double magnitude, double angle) {
+  vector_t ret = (vector_t) {.x = 0, .y = magnitude};
+  ret = vec_rotate(ret, angle);
+  return ret;
+}
