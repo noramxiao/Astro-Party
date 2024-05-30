@@ -24,20 +24,19 @@ const char *TITLE_PATH = "assets/title.png";
 const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
 const size_t SCORE_HEIGHT = 75; // height of entire score bar
 
-const double INIT_SHIP_SPEED = 0;
+const double INIT_SHIP_SPEED = 100;
 const double INIT_SHIP_ANGLES[] = {
   M_PI / 4, 
   5 * M_PI / 4, 
   7 * M_PI / 4,
   3 * M_PI / 4
 };
+const double PLAYER_ROT_SPEED = -2.5 * M_PI;
 
 const double INIT_BULLET_SPEED = 300;
 
-const double PLAYER_ROT_SPEED = -2 * M_PI;
-
 const double WALL_DIM = 1;
-const double ELASTICITY = 0.2;
+const double ELASTICITY = 1;
 const double THRUST_POWER = 300;
 const double DRAG_COEF = 4;
 
@@ -164,6 +163,9 @@ void add_bullet(state_t *state, body_t *ship) {
   scene_add_body(scene, bullet);
   for (int i = 0; i < scene_bodies(scene); i++) {
     body_t *body = scene_get_body(scene, i);
+    if (body == bullet) {
+      continue;
+    }
     entity_info_t *info = body_get_info(body);
     if (info->type == BULLET || info->type == ASTEROID) {
       create_destructive_collision(scene, body, bullet);
@@ -341,8 +343,6 @@ asset_t *create_button_from_info(state_t *state, button_info_t info) {
 
   return button;
 }
-
-
 
 /**
  * Initializes and stores the button assets in the state.
