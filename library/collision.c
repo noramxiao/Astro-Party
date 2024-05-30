@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const double PI = 3.14159265359;
-
 /**
  * Returns a list of vectors representing the edges of a shape.
  *
