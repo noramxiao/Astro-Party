@@ -21,8 +21,8 @@ const size_t N_PLAYERS = 2;
 
 const double SHIP_MASS = 10.0;
 const size_t CIRC_NPOINTS = 100;
+const double WALL_DIM = 1;
 
-rgb_color_t PLAYER_COLORS[] = (rgb_color_t[]){(rgb_color_t){1, 0, 0}, (rgb_color_t){0, 0, 1}};
 rgb_color_t white = (rgb_color_t){1, 1, 1};
 
 enum mode {
@@ -80,7 +80,7 @@ map_t maps[] = {
     .start_pos = (vector_t[]){(vector_t){100, 300}, 
     (vector_t){400, 200}}
   }
-}
+};
 
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
@@ -123,9 +123,7 @@ list_t *make_rectangle(vector_t center, double width, double height) {
 
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
-  list_t *ship_shape = make_ship(pos, team, (vector_t){0, 0});
-  body_t *ship_body = body_init_with_info(ship_shape, SHIP_MASS, PLAYER_COLORS[team],
-                                          entity_info_init(SHIP), free);
+  body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
   scene_add_body(state->scene, ship_body);
 }
 
@@ -174,7 +172,7 @@ void init_map(state_t *state, map_t map){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
   asset_t *background_asset =
       asset_make_image(map.bg_path, background_bbox);
-  list_add(state->assets, background_asset);
+  list_add(state->game_assets, background_asset);
 }
 
 void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
