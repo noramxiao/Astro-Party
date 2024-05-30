@@ -87,12 +87,6 @@ button_info_t button_templates[] = {
      .handler = (void *)toggle_play},
 };
 
-
-
-
-
-
-
 void add_ship(state_t *state, vector_t pos, size_t team) {
   body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
   scene_add_body(state->scene, ship_body);
@@ -255,6 +249,7 @@ state_t *emscripten_init() {
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
+  printf("Finished init\n");
   return state;
 }
 
