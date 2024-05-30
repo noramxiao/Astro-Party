@@ -69,7 +69,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
-    .bg_path = "assets/space.jpg",
+    .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
     (vector_t){300, 300}},
@@ -86,12 +86,6 @@ button_info_t button_templates[] = {
      .image_box = (SDL_Rect){0, 200, 100, 100},
      .handler = (void *)toggle_play},
 };
-
-
-
-
-
-
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
   body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
@@ -174,6 +168,9 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
+  init_map(state, state->map);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
 }
 
 void handle_buttons(state_t *state, double x, double y) {
@@ -190,6 +187,8 @@ void on_click(state_t *state, double x, double y) {
   switch (state->mode) {
     case HOME:
       handle_buttons(state, x, y);
+      break;
+    
   }
 }
 
@@ -347,16 +346,14 @@ state_t *emscripten_init() {
   state->P1_score = 0;
   state->P2_score = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
+  state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
-  assert(state->scene);
-
-  init_map(state, state->map);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
+  home_init(state);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
+  printf("Finished init\n");
   return state;
 }
 
@@ -367,15 +364,19 @@ bool emscripten_main(state_t *state) {
   switch (state->mode) {
     case HOME: {
       render_assets(state->home_assets);
+      break;
     }
     case GAME: {
       scene_tick(state->scene, dt);
 
-      update_score(state);
+      if (update_score(state)) {
+
+      }
       if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
 
       render_assets(state->game_assets);
       sdl_render_scene(state->scene, NULL);
+      break;
     }
   }
   return false;
