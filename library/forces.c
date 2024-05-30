@@ -159,7 +159,7 @@ void create_drag(scene_t *scene, double gamma, body_t *body) {
 static void thrust_force(void *info) {
   body_aux_t *aux = (body_aux_t *)info;
   body_t *body = list_get(aux->bodies, 0);
-  vector_t dir = (vector_t){-sin(body_get_rotation(body)), cos(body_get_rotation(body))}
+  vector_t dir = (vector_t){-sin(body_get_rotation(body)), cos(body_get_rotation(body))};
   vector_t thrust = vec_multiply(aux->force_const, dir);
 
   body_add_force(body, thrust);
