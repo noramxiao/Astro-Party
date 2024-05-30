@@ -49,8 +49,8 @@ struct state {
   list_t *home_assets;
   list_t *game_assets;
 
-  body_t *ship1;
-  body_t *ship2;
+  body_t *player1;
+  body_t *player2;
 
   scene_t *scene;
 };
@@ -271,14 +271,14 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
-  state->home_assets = list_init(INITIAL_CAPACITY, asset_destroy);
+  state->home_assets = list_init(INITIAL_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
   assert(state->scene);
 
   init_map(state, state->map);
-  state->ship1 = scene_get_body(state->scene, 0);
-  state->ship2 = scene_get_body(state->scene, 1);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
@@ -290,14 +290,15 @@ void update_score(state_t *state) {
   bool p2 = false;
   size_t n_bodies = scene_bodies(state->scene);
 
-  for (size_t i = 0; i < n_bodies; i++) {
-    void *info = body_get_info(scene_get_body(state->scene, i));
-    if (info == P1_SHIP || info == P1_PILOT) {
-      p1 = true;
-    } else if (info == P2_SHIP || info == P2_PILOT) {
-      p2 = true;
-    }
-  }
+  
+  // for (size_t i = 0; i < n_bodies; i++) {
+  //   void *info = body_get_info(scene_get_body(state->scene, i));
+  //   if (info == P1_SHIP || info == P1_PILOT) {
+  //     p1 = true;
+  //   } else if (info == P2_SHIP || info == P2_PILOT) {
+  //     p2 = true;
+  //   }
+  // }
 
   if (!(p1 && p2)) {
     if (p1) {
