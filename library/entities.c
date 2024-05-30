@@ -14,6 +14,7 @@ const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
 const rgb_color_t GRAY = (rgb_color_t) {.r = 150, .g = 150, .b = 150};
 
 // ship constants
+const double SHIP_MASS = 10;
 const double SHIP_BASE = 20;
 const double SHIP_HEIGHT = 30;
 
