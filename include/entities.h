@@ -1,3 +1,6 @@
+#ifndef __ENTITIES_H__
+#define __ENTITIES_H__
+
 #include "vector.h"
 #include "list.h"
 #include "body.h"
@@ -50,3 +53,5 @@ body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t init_velocity)
  * @return a pointer to the asteroid body
 */
 body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity);
+
+#endif
