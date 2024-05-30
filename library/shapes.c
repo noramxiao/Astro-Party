@@ -4,6 +4,7 @@
 #include "shapes.h"
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 const size_t CIRC_POINTS = 80;
 const double PI = 3.141592653589793238462643383279502884197;
