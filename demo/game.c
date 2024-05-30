@@ -131,19 +131,19 @@ void add_bounds(state_t *state) {
   list_t *wall1_shape =
       make_rectangle((vector_t){MAX.x, MAX.y / 2}, WALL_DIM, MAX.y);
   body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, white,
-                                      entity_info_init(WALL, -1), free);
+                                      entity_info_init(WALL, 100), free);
   list_t *wall2_shape =
       make_rectangle((vector_t){0, MAX.y / 2}, WALL_DIM, MAX.y);
   body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, white,
-                                      entity_info_init(WALL, -1), free);
+                                      entity_info_init(WALL, 100), free);
   list_t *ceiling_shape =
       make_rectangle((vector_t){MAX.x / 2, MAX.y}, MAX.x, WALL_DIM);
   body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, white,
-                                        entity_info_init(WALL, -1), free);
+                                        entity_info_init(WALL, 100), free);
   list_t *ground_shape =
       make_rectangle((vector_t){MAX.x / 2, 0}, MAX.x, WALL_DIM);
   body_t *ground = body_init_with_info(ground_shape, INFINITY, white,
-                                       entity_info_init(WALL, -1), free);
+                                       entity_info_init(WALL, 100), free);
   scene_add_body(state->scene, wall1);
   scene_add_body(state->scene, wall2);
   scene_add_body(state->scene, ceiling);
@@ -164,7 +164,7 @@ void init_map(state_t *state, map_t map){
   for(size_t i = 0; i < map.num_blocks; i++){
     list_t *block_shape = make_rectangle(map.block_locations[i], map.block_sizes[i].x, map.block_sizes[i].y);
     body_t *block = body_init_with_info(block_shape, INFINITY, white,
-                                      entity_info_init(WALL, -1), free);
+                                      entity_info_init(WALL, 100), free);
     scene_add_body(state->scene, block);
   }
 
