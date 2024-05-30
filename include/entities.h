@@ -17,10 +17,12 @@ typedef enum {
 
 typedef struct entity_info {
 	entity_type_t type;
-	size_t player;
+	size_t team;
 } entity_info_t;
 
 entity_type_t get_type(body_t *body);
+
+size_t get_team(body_t* body);
 
 entity_info_t *entity_info_init(entity_type_t type, size_t player_idx);
 
