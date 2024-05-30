@@ -63,7 +63,7 @@ body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t init_velocity)
 
 body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity) {
 	list_t *asteroid = make_circle(radius);
-	entity_info_t *asteroid_info = entity_info_init(ASTEROID, NULL);
+	entity_info_t *asteroid_info = entity_info_init(ASTEROID, 100);
 	double mass = radius * radius * ASTEROID_MASS_DENSITY;
 	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, (free_func_t)entity_info_free);
 	body_set_centroid(ret, centroid);
