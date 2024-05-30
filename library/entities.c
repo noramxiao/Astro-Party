@@ -4,6 +4,7 @@
 #include "color.h"
 #include "shapes.h"
 #include "entities.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -14,7 +15,6 @@ const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
 const rgb_color_t GRAY = (rgb_color_t) {.r = 150, .g = 150, .b = 150};
 
 // ship constants
-const double SHIP_MASS = 10;
 const double SHIP_BASE = 20;
 const double SHIP_HEIGHT = 30;
 
@@ -63,9 +63,9 @@ body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t init_velocity)
 
 body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity) {
 	list_t *asteroid = make_circle(centroid, radius);
-	entity_info_t *asteroid_info = entity_info_init(ASTEROID, 69);
+	entity_info_t *asteroid_info = entity_info_init(ASTEROID, 100);
 	double mass = radius * radius * ASTEROID_MASS_DENSITY;
-	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, (free_func_t) entity_info_free);
+	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, (free_func_t)entity_info_free);
 	body_set_centroid(ret, centroid);
 	return ret;
 }

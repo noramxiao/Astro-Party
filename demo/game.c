@@ -12,7 +12,6 @@
 #include "sdl_wrapper.h"
 #include "entities.h"
 #include "shapes.h"
-
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
 
@@ -20,6 +19,7 @@ const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 
+const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 
 rgb_color_t white = (rgb_color_t){1, 1, 1};
@@ -86,6 +86,12 @@ button_info_t button_templates[] = {
      .image_box = (SDL_Rect){0, 200, 100, 100},
      .handler = (void *)toggle_play},
 };
+
+
+
+
+
+
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
   body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
