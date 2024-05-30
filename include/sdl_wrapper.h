@@ -139,7 +139,7 @@ void sdl_show(void);
 
 /**
  * Draws all bodies in a scene.
- * This internally calls sdl_clear(), sdl_draw_polygon(), and sdl_show(),
+ * This internally calls sdl_draw_polygon()
  * so those functions should not be called directly.
  *
  * @param scene the scene to draw

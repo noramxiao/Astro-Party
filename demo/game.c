@@ -11,8 +11,8 @@
 #include "collision.h"
 #include "forces.h"
 #include "sdl_wrapper.h"
-#include "entities.h"
 #include "shapes.h"
+#include "entities.h"
 
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
@@ -21,29 +21,26 @@ const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
+const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
+const size_t SCORE_HEIGHT = 75; // height of entire score bar
 
-const vector_t INIT_VELOS[] = {
-  (vector_t) {.x = 80, .y = 80},
-  (vector_t) {.x = -80, .y = -80},
-  (vector_t) {.x = 80, .y = -80},
-  (vector_t) {.x = -80, .y = 80},
+const double INIT_SHIP_SPEED = 100;
+const double INIT_SHIP_ANGLES[] = {
+  M_PI / 4, 
+  5 * M_PI / 4, 
+  7 * M_PI / 4,
+  3 * M_PI / 4
 };
+const double PLAYER_ROT_SPEED = -2.5 * M_PI;
 
-const double INIT_ANGLES[] = {
-  M_PI / 4 - M_PI / 2, 
-  5 * M_PI / 4 - M_PI / 2, 
-  7 * M_PI / 4 - M_PI / 2,
-  3 * M_PI / 4 - M_PI / 2
-};
-
-const double PLAYER_ROT_SPEED = -3 * M_PI;
+const double INIT_BULLET_SPEED = 300;
 
 const double WALL_DIM = 1;
 const double ELASTICITY = 1;
-const double THRUST_POWER = 70;
-const double DRAG_COEF = 1;
-const double G = 1;
-rgb_color_t white = (rgb_color_t){0, 1, 1};
+const double THRUST_POWER = 300;
+const double DRAG_COEF = 4;
+
+const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
 
 enum mode {
   HOME,
@@ -112,31 +109,91 @@ double rand_double() { return (double)rand() / RAND_MAX; }
 
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
-     .image_box = (SDL_Rect){0, 200, 100, 100},
+     .image_box = (SDL_Rect){400, 300, 200, 75},
      .handler = (void *)toggle_play},
 };
 
+
+
 void add_ship(state_t *state, vector_t pos, size_t team) {
-  body_t *ship_body = make_ship(pos, team, INIT_VELOS[team], INIT_ANGLES[team]);
+  vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
+  body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team]);
   scene_add_body(state->scene, ship_body);
+}
+
+void reset_game(state_t *state) {
+  // clear and re-add bricks. Which function initializes bricks in the
+  // beginning of the game?
+  size_t n_bodies = scene_bodies(state->scene);
+
+  for (size_t i = 0; i < n_bodies; i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    if (get_type(body) == BULLET) {
+      body_remove(body);
+    }
+  }
+
+  // reset players's velocity and position
+  body_set_centroid(state->player1, state->map.start_pos[0]);
+  body_set_velocity(state->player1, (vector_t) {0, 0});
+  body_set_centroid(state->player2, state->map.start_pos[1]);
+  body_set_velocity(state->player2, (vector_t) {0, 0});
+
+  // reset players's forces and impulses
+  body_reset(state->player1);
+  body_reset(state->player2);
+
+}
+
+void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
+                double force_const) {
+  state_t *state = aux;
+  entity_info_t *bullet_info = body_get_info(body2);
+  if(bullet_info->team == 0){
+    state->P1_score++;
+  }
+  if(bullet_info->team == 1){
+    state->P2_score++;
+  }
+  reset_game(state);
+}
+
+void add_bullet(state_t *state, body_t *ship) {
+  vector_t ship_centroid = body_get_centroid(ship);
+  double ship_angle = body_get_rotation(ship);
+  body_t *bullet = make_bullet(ship_centroid, ship_angle, INIT_BULLET_SPEED);
+  scene_t *scene = state->scene;
+  scene_add_body(scene, bullet);
+  for (int i = 0; i < scene_bodies(scene); i++) {
+    body_t *body = scene_get_body(scene, i);
+    if (body == bullet) {
+      continue;
+    }
+    entity_info_t *info = body_get_info(body);
+    if (info->type == BULLET || info->type == ASTEROID) {
+      create_destructive_collision(scene, body, bullet);
+    } else if (info->type == SHIP) {
+      create_collision(scene, body, bullet, (collision_handler_t) score_hit, NULL, ELASTICITY);
+    }
+  }
 }
 
 void add_bounds(state_t *state) {
   list_t *wall1_shape =
       make_rectangle((vector_t){MAX.x, MAX.y / 2}, WALL_DIM, MAX.y);
-  body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, white,
+  body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, WHITE,
                                       entity_info_init(WALL, 100), free);
   list_t *wall2_shape =
       make_rectangle((vector_t){0, MAX.y / 2}, WALL_DIM, MAX.y);
-  body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, white,
+  body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, WHITE,
                                       entity_info_init(WALL, 100), free);
   list_t *ceiling_shape =
       make_rectangle((vector_t){MAX.x / 2, MAX.y}, MAX.x, WALL_DIM);
-  body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, white,
+  body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, WHITE,
                                         entity_info_init(WALL, 100), free);
   list_t *ground_shape =
       make_rectangle((vector_t){MAX.x / 2, 0}, MAX.x, WALL_DIM);
-  body_t *ground = body_init_with_info(ground_shape, INFINITY, white,
+  body_t *ground = body_init_with_info(ground_shape, INFINITY, WHITE,
                                        entity_info_init(WALL, 100), free);
   scene_add_body(state->scene, wall1);
   scene_add_body(state->scene, wall2);
@@ -154,7 +211,7 @@ void add_obstacles(state_t *state){
   add_bounds(state);
   for(size_t i = 0; i < state->map.num_blocks; i++){
     list_t *block_shape = make_rectangle(state->map.block_locations[i], state->map.block_sizes[i].x, state->map.block_sizes[i].y);
-    body_t *block = body_init_with_info(block_shape, INFINITY, white,
+    body_t *block = body_init_with_info(block_shape, INFINITY, WHITE,
                                       entity_info_init(WALL, 100), free);
     scene_add_body(state->scene, block);
   }
@@ -201,6 +258,8 @@ void init_map(state_t *state){
 }
 
 void on_key(Uint8 *key_state, state_t *state) {
+  if (state->mode != GAME) { return; }
+
   body_t *p1 = state->player1;
   body_t *p2 = state->player2;
   double dt = state->dt;
@@ -221,6 +280,14 @@ void on_key(Uint8 *key_state, state_t *state) {
     // vector_t curr_velocity = body_get_velocity(p2);
     // vector_t new_velocity = vec_rotate(curr_velocity, da);
     // body_set_velocity(p2, new_velocity);
+  }
+
+  if (key_state[SDL_SCANCODE_Q]) {
+    add_bullet(state, p1);
+  }
+
+  if (key_state[SDL_SCANCODE_N]) {
+    add_bullet(state, p2);
   }
 }
 
@@ -278,8 +345,6 @@ asset_t *create_button_from_info(state_t *state, button_info_t info) {
   return button;
 }
 
-
-
 /**
  * Initializes and stores the button assets in the state.
  */
@@ -296,7 +361,7 @@ void create_buttons(state_t *state) {
 void home_init(state_t *state) {
   create_buttons(state);
 
-  asset_t *title = asset_make_image(TITLE_PATH, (SDL_Rect){100, 100, 500, 100});
+  asset_t *title = asset_make_image(TITLE_PATH, TITLE_BOX);
   list_add(state->home_assets, title);
 }
 
@@ -322,48 +387,6 @@ bool update_score(state_t *state) {
 //   }
   return false;
 
-}
-
-
-
-void reset_game(state_t *state) {
-
-  // clear and re-add bricks. Which function initializes bricks in the
-  // beginning of the game?
-  size_t n_bodies = scene_bodies(state->scene);
-
-  for (size_t i = 0; i < n_bodies; i++) {
-    body_t *body = scene_get_body(state->scene, i);
-    if (get_type(body) == BULLET) {
-      body_remove(body);
-    }
-  }
-  
-
-
-  // reset players's velocity and position
-  body_set_centroid(state->player1, state->map.start_pos[0]);
-  body_set_velocity(state->player1, (vector_t) {0, 0});
-  body_set_centroid(state->player2, state->map.start_pos[1]);
-  body_set_velocity(state->player2, (vector_t) {0, 0});
-
-  // reset players's forces and impulses
-  body_reset(state->player1);
-  body_reset(state->player2);
-
-}
-
-void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
-                double force_const) {
-  state_t *state = aux;
-  entity_info_t *bullet_info = body_get_info(body2);
-  if(bullet_info->team == 0){
-    state->P1_score++;
-  }
-  if(bullet_info->team == 1){
-    state->P2_score++;
-  }
-  reset_game(state);
 }
 
 void add_force_creators(state_t *state) {
@@ -404,6 +427,33 @@ void render_assets(list_t *assets) {
   }
 }
 
+/** 
+ * Renders score as a progress bar at the top of the screen.
+*/
+void render_scores(state_t *state) {
+  // player 1
+  size_t p1 = state->P1_score;
+  rgb_color_t p1_color = PLAYER_COLORS[0];
+  size_t width = p1 * (MAX.x / WIN_SCORE);
+  size_t height = SCORE_HEIGHT / 2;
+  vector_t centroid = (vector_t){.x = width / 2.0, .y = SCORE_HEIGHT / 4.0};
+  list_t *rectangle_pts = make_rectangle(centroid, width, height);
+  polygon_t *rectangle = polygon_init(rectangle_pts, VEC_ZERO, 0.0, p1_color.r, 
+                                      p1_color.g, p1_color.b);
+  sdl_draw_polygon(rectangle, p1_color);
+
+  // player 2
+  size_t p2 = state->P2_score;
+  rgb_color_t p2_color = PLAYER_COLORS[1];
+  size_t width_2 = p2 * (MAX.x / WIN_SCORE);
+  size_t height_2 = SCORE_HEIGHT / 2;
+  vector_t centroid_2 = (vector_t){.x = width_2 / 2.0, .y = 0.75 * SCORE_HEIGHT};
+  list_t *rectangle_pts_2 = make_rectangle(centroid_2, width_2, height_2);
+  polygon_t *rectangle_2 = polygon_init(rectangle_pts_2, VEC_ZERO, 0.0, p2_color.r, 
+                                      p2_color.g, p2_color.b);
+  sdl_draw_polygon(rectangle_2, p2_color);
+}
+
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
@@ -419,9 +469,9 @@ state_t *emscripten_init() {
   state->scene = scene_init();
   
   home_init(state);
-  init_map(state);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
+  // init_map(state);
+  // state->player1 = scene_get_body(state->scene, 0);
+  // state->player2 = scene_get_body(state->scene, 1);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
@@ -435,6 +485,7 @@ bool emscripten_main(state_t *state) {
 
   switch (state->mode) {
     case HOME: {
+      sdl_clear();
       render_assets(state->home_assets);
       sdl_show();
       break;
@@ -442,15 +493,16 @@ bool emscripten_main(state_t *state) {
     case GAME: {
       scene_tick(state->scene, dt);
 
-      if (update_score(state)) {
-
-      }
       if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
 
+      sdl_clear();
       render_assets(state->game_assets);
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
       sdl_render_scene_cam(state->scene, NULL, cam_center, MAX);
       //sdl_render_scene(state->scene, NULL);
+      render_scores(state);
+      sdl_show();
+
       state->dt = dt;
       sdl_is_done(state);
       break;

@@ -6,6 +6,12 @@
 #include "body.h"
 #include "color.h"
 
+// Color constants
+// extern const rgb_color_t RED; 
+// extern const rgb_color_t BLUE; 
+extern const rgb_color_t PLAYER_COLORS[];
+// extern const rgb_color_t GRAY;
+
 typedef enum {
 	SHIP,
 	PILOT,
@@ -46,6 +52,15 @@ body_t *make_ship(vector_t centroid, size_t player_idx, vector_t velocity, doubl
  * @return a pointer to the pilot body
 */
 body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, double angle);
+
+/** 
+ * Creates a body of a circle shape for a bullet.
+ * 
+ * @param centroid centroid of the bullet
+ * @param velocity velocity of the bullet
+ * @return a pointer to the bullet body
+*/
+body_t *make_bullet(vector_t ship_centroid, double ship_angle, double init_speed);
 
 /** 
  * Creates a body for an asteroid. Will just be a grey circle for now.

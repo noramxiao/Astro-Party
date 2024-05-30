@@ -13,7 +13,7 @@ const rgb_color_t RED = (rgb_color_t) {.r = 1, .g = 0, .b = 0};
 const rgb_color_t BLUE = (rgb_color_t) {.r = 0, .g = 0, .b = 1}; 
 const rgb_color_t PURPLE = (rgb_color_t) {.r = 0.6, .g = 0.1, .b = 1}; 
 const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
-const rgb_color_t GRAY = (rgb_color_t) {.r = 0.5, .g = 0.5, .b = 0.5};
+const rgb_color_t GRAY = (rgb_color_t) {.r = 150, .g = 150, .b = 150};
 
 // ship constants
 const double SHIP_MASS = 10;
@@ -29,6 +29,9 @@ const double BLACKHOLE_CIRC_RAD = 10;
 
 // asteroid constants
 const double ASTEROID_MASS_DENSITY = 0.1;
+
+// bullet constants
+const double BULLET_RADIUS = 5;
 
 entity_info_t *entity_info_init(entity_type_t type, size_t player_idx) {
 	entity_info_t *ret = malloc(sizeof(entity_info_t));
@@ -71,6 +74,22 @@ body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, doub
 	body_set_centroid(ret, centroid);
 	body_set_velocity(ret, velocity);
 	body_set_rotation(ret, angle);
+	return ret;
+}
+
+body_t *make_bullet(vector_t ship_centroid, double ship_angle, double init_speed) {
+	list_t *bullet = make_circle(ship_centroid, BULLET_RADIUS);
+	entity_info_t *bullet_info = entity_info_init(BULLET, 100);
+	body_t *ret = body_init_with_info(bullet, PILOT_MASS, GRAY, bullet_info, (free_func_t) entity_info_free);
+
+	double dist_from_centroid = SHIP_HEIGHT * 2 / 3 + BULLET_RADIUS + 1;
+	vector_t disp = vec_make(dist_from_centroid, ship_angle);
+	vector_t bullet_centroid = vec_add(ship_centroid, disp);
+	body_set_centroid(ret, bullet_centroid);
+	
+	vector_t velocity = vec_make(init_speed, ship_angle);
+	body_set_velocity(ret, velocity);
+
 	return ret;
 }
 
