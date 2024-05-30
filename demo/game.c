@@ -306,7 +306,6 @@ void reset_game(state_t *state) {
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
                 double force_const) {
   state_t *state = aux;
-  entity_info_t *ship_info = body_get_info(body1);
   entity_info_t *bullet_info = body_get_info(body2);
   if(bullet_info->team == 0){
     state->P1_score++;
@@ -348,6 +347,7 @@ void render_assets(list_t *assets) {
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
+  
   srand(time(NULL));
   state_t *state = malloc(sizeof(state_t));
   state->mode = GAME;
@@ -357,12 +357,16 @@ state_t *emscripten_init() {
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
+  
   //home_init(state);
   init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
+  
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
+  add_force_creators(state);
+  
   printf("Finished init\n");
   return state;
 }
