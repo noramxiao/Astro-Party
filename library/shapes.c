@@ -3,10 +3,11 @@
 #include "list.h"
 #include "shapes.h"
 #include <stdlib.h>
+#include <assert.h>
 #include <math.h>
 #include <assert.h>
 
-const size_t CIRC_POINTS = 80;
+const size_t CIRC_POINTS = 100;
 const double PI = 3.141592653589793238462643383279502884197;
 
 list_t *make_rectangle(vector_t centroid, double width, double height) {
