@@ -70,7 +70,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
-    .bg_path = "assets/space.jpg",
+    .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
     (vector_t){300, 300}},
@@ -87,12 +87,6 @@ button_info_t button_templates[] = {
      .image_box = (SDL_Rect){0, 200, 100, 100},
      .handler = (void *)toggle_play},
 };
-
-
-
-
-
-
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
   body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
@@ -259,6 +253,7 @@ state_t *emscripten_init() {
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
+  printf("Finished init\n");
   return state;
 }
 
