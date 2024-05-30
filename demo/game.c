@@ -21,7 +21,7 @@ const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
 
 const size_t CIRC_NPOINTS = 100;
-const double WALL_DIM = 1;
+const double WALL_DIM = 100;
 const double ELASTICITY = 0.2;
 const double THRUST_POWER = 50;
 const double DRAG_COEF = 1;
