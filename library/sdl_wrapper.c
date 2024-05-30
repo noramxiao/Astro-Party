@@ -1,6 +1,7 @@
 #include "sdl_wrapper.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_mixer.h>
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -43,6 +44,14 @@ uint32_t key_start_timestamp;
  * Initially 0.
  */
 clock_t last_clock = 0;
+/**
+ * The last time each keyidx was pressed
+*/
+double last_presses[] = {0, 0, 0, 0};
+/**
+ * The last time each keyidx was released
+*/
+double last_releases[] = {0, 0, 0, 0};
 
 /** Computes the center of the window in pixel coordinates */
 vector_t get_window_center(void) {
@@ -81,6 +90,21 @@ vector_t get_window_position(vector_t scene_pos, vector_t window_center) {
   return pixel;
 }
 
+size_t get_keyidx(player_key_t key) {
+  switch(key) {
+    case P1_TURN:
+      return 0;
+    case P1_SHOOT:
+      return 1;
+    case P2_TURN:
+      return 2;
+    case P2_SHOOT:
+      return 3;
+    default:
+      return -1;
+  }
+}
+
 /**
  * Converts an SDL key code to a char.
  * 7-bit ASCII characters are just returned
@@ -114,6 +138,7 @@ void sdl_init(vector_t min, vector_t max) {
                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                             SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+  Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
   TTF_Init();
 }
 
@@ -192,6 +217,32 @@ void sdl_draw_text(TTF_Font *font, const char *string, SDL_Color *forecol,
   SDL_RenderCopy(renderer, caption, NULL, &rect);
 }
 
+void sdl_draw_polygon_cam(polygon_t *poly, rgb_color_t color, vector_t cam_center, vector_t cam_size) {
+  list_t *points = polygon_get_points(poly);
+  // Check parameters
+  size_t n = list_size(points);
+  assert(n >= 3);
+
+  vector_t window_center = get_window_center();
+
+  // Convert each vertex to a point on screen
+  int16_t *x_points = malloc(sizeof(*x_points) * n),
+          *y_points = malloc(sizeof(*y_points) * n);
+  assert(x_points != NULL);
+  assert(y_points != NULL);
+  for (size_t i = 0; i < n; i++) {
+    vector_t *vertex = list_get(points, i);
+    vector_t pixel = get_window_position(*vertex, window_center);
+    x_points[i] = (pixel.x - cam_center.x + cam_size.x/2)*WINDOW_WIDTH/cam_size.x;
+    y_points[i] = (pixel.y + cam_center.y - WINDOW_HEIGHT + cam_size.y/2)*WINDOW_HEIGHT/cam_size.y;
+  }
+
+  // Draw polygon with the given color
+  filledPolygonRGBA(renderer, x_points, y_points, n, color.r * 255,
+                    color.g * 255, color.b * 255, 255);
+  free(x_points);
+  free(y_points);
+}
 void sdl_draw_polygon(polygon_t *poly, rgb_color_t color) {
   list_t *points = polygon_get_points(poly);
   // Check parameters
@@ -253,8 +304,49 @@ void sdl_render_scene(scene_t *scene, void *aux) {
   }
 }
 
+void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector_t cam_size) {
+  sdl_clear();
+  size_t body_count = scene_bodies(scene);
+  for (size_t i = 0; i < body_count; i++) {
+    body_t *body = scene_get_body(scene, i);
+    list_t *shape = body_get_shape(body);
+    polygon_t *poly = polygon_init(shape, (vector_t){0, 0}, 0, 0, 0, 0);
+    sdl_draw_polygon_cam(poly, *body_get_color(body), cam_center, cam_size);
+    list_free(shape);
+  }
+  if (aux != NULL) {
+    body_t *body = aux;
+    sdl_draw_polygon(body_get_polygon(body), *body_get_color(body));
+  }
+  sdl_show();
+}
+
 void sdl_on_key(key_handler_t handler) { key_handler = handler; }
 void sdl_on_click(click_handler_t handler) { click_handler = handler; }
+
+double get_last_press(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  return last_presses[idx];
+}
+
+void set_last_press(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  last_presses[idx] = clock();
+}
+
+double get_last_release(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  return last_releases[idx];
+}
+
+void set_last_release(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  last_releases[idx] = clock();
+}
+
+void sdl_play_sound(Mix_Chunk *sound) {
+  Mix_PlayChannel(-1, sound, 0);
+}
 
 SDL_Rect get_bounding_box(body_t *body) {
   double min_x = DBL_MAX;

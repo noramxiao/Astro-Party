@@ -24,21 +24,29 @@ const char *TITLE_PATH = "assets/title.png";
 const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
 const size_t SCORE_HEIGHT = 75; // height of entire score bar
 
-const double INIT_SHIP_SPEED = 100;
+const double INIT_SHIP_SPEED = 0;
 const double INIT_SHIP_ANGLES[] = {
   M_PI / 4, 
   5 * M_PI / 4, 
   7 * M_PI / 4,
   3 * M_PI / 4
 };
-const double PLAYER_ROT_SPEED = -2.5 * M_PI;
+const double PLAYER_ROT_SPEED = -3 * M_PI;
+const double BOOST_MAGNITUDE = 2000;
+const double BOOST_ANGLE = -M_PI / 2;
+const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
 
-const double INIT_BULLET_SPEED = 300;
+// sound constants
+const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
+const char *BOOST_SOUND_PATH = "assets/sounds/boost.wav";
+
+const double INIT_BULLET_SPEED = 500;
 
 const double WALL_DIM = 1;
+
 const double ELASTICITY = 1;
-const double THRUST_POWER = 300;
-const double DRAG_COEF = 4;
+const double THRUST_POWER = 600;
+const double DRAG_COEF = 5;
 
 const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
 
@@ -51,9 +59,12 @@ enum mode {
 typedef struct map {
   size_t num_blocks;
   size_t num_asteroids;
+  size_t num_blackholes;
   const char *bg_path;
   vector_t *block_locations;
   vector_t *block_sizes;
+  vector_t *blackhole_locations;
+  double *blackhole_masses;
   vector_t *start_pos;
 } map_t;
 
@@ -69,6 +80,9 @@ struct state {
 
   body_t *player1;
   body_t *player2;
+  
+  Mix_Chunk *shoot_sound;
+  Mix_Chunk *boost_sound;
 
   scene_t *scene;
   double dt;
@@ -89,7 +103,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
-    .num_asteroids = 5,
+    .num_asteroids = 10,
     .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
@@ -109,8 +123,6 @@ button_info_t button_templates[] = {
      .image_box = (SDL_Rect){400, 300, 200, 75},
      .handler = (void *)toggle_play},
 };
-
-
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
   vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
@@ -139,7 +151,6 @@ void reset_game(state_t *state) {
   // reset players's forces and impulses
   body_reset(state->player1);
   body_reset(state->player2);
-
 }
 
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
@@ -166,11 +177,10 @@ void add_bullet(state_t *state, body_t *ship) {
     if (body == bullet) {
       continue;
     }
-    entity_info_t *info = body_get_info(body);
-    if (info->type == BULLET || info->type == ASTEROID) {
+    if (get_type(body) == BULLET || get_type(body) == ASTEROID) {
       create_destructive_collision(scene, body, bullet);
-    } else if (info->type == SHIP) {
-      create_collision(scene, body, bullet, (collision_handler_t) score_hit, NULL, ELASTICITY);
+    } else if (get_type(body) == SHIP) {
+      create_collision(scene, body, bullet, (collision_handler_t) score_hit, state, ELASTICITY);
     }
   }
 }
@@ -243,10 +253,9 @@ void init_map(state_t *state){
   add_ship(state, map.start_pos[0], 0);
   add_ship(state, map.start_pos[1], 1);
 
-
   add_obstacles(state);
-
   add_asteroids(state);
+
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
   asset_t *background_asset =
@@ -261,38 +270,61 @@ void on_key(Uint8 *key_state, state_t *state) {
   body_t *p2 = state->player2;
   double dt = state->dt;
 
-  if (key_state[SDL_SCANCODE_W]) {
+  if (key_state[P1_TURN]) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p1);
     body_set_rotation(p1, curr_angle + da);
-    vector_t curr_velocity = body_get_velocity(p1);
-    vector_t new_velocity = vec_rotate(curr_velocity, da);
-    body_set_velocity(p1, new_velocity);
+    set_last_press(P1_TURN);
+  } else {
+    double now = clock(); 
+    double time_since_last_press = now - get_last_press(P1_TURN);
+    double time_since_last_release = now - get_last_release(P1_TURN);
+    if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
+      double curr_angle = body_get_rotation(p1);
+      double new_angle = curr_angle + BOOST_ANGLE;
+      body_set_rotation(p1, new_angle);
+      vector_t boost_impulse = vec_make(BOOST_MAGNITUDE, new_angle);
+      body_add_impulse(p1, boost_impulse);
+      sdl_play_sound(state->boost_sound);
+    }
+    set_last_release(P1_TURN);
   }
 
-  if (key_state[SDL_SCANCODE_M]) {
+  if (key_state[P2_TURN]) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p2);
     body_set_rotation(p2, curr_angle + da);
-    vector_t curr_velocity = body_get_velocity(p2);
-    vector_t new_velocity = vec_rotate(curr_velocity, da);
-    body_set_velocity(p2, new_velocity);
+    set_last_press(P2_TURN);
+  } else {
+    double now = clock();
+    double time_since_last_press = now - get_last_press(P2_TURN);
+    double time_since_last_release = now - get_last_release(P2_TURN);
+    if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
+      double curr_angle = body_get_rotation(p2);
+      double new_angle = curr_angle + BOOST_ANGLE;
+      body_set_rotation(p2, new_angle);
+      vector_t boost_impulse = vec_make(BOOST_MAGNITUDE, new_angle);
+      body_add_impulse(p2, boost_impulse);
+      sdl_play_sound(state->boost_sound);
+    }
+    set_last_release(P2_TURN);
   }
 
-  if (key_state[SDL_SCANCODE_Q]) {
+  if (key_state[P1_SHOOT]) {
     add_bullet(state, p1);
+    sdl_play_sound(state->shoot_sound);
+    set_last_press(P1_SHOOT);
   }
 
-  if (key_state[SDL_SCANCODE_N]) {
+  if (key_state[P2_SHOOT]) {
     add_bullet(state, p2);
+    sdl_play_sound(state->shoot_sound);
+    set_last_press(P2_SHOOT);
   }
 }
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
-  init_map(state);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
 }
 
 void handle_buttons(state_t *state, double x, double y) {
@@ -318,7 +350,6 @@ void on_click(state_t *state, double x, double y) {
       break;
   }
 }
-
 
 /**
  * Using `info`, initializes a button in the scene.
@@ -403,6 +434,16 @@ void add_force_creators(state_t *state) {
         }
       }
       break;
+    case ASTEROID:
+      create_drag(state->scene, DRAG_COEF, body);
+      for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
+        body_t *body2 = scene_get_body(state->scene, j);
+        entity_type_t t = get_type(body2);
+        if(t == WALL || t == ASTEROID){
+          create_physics_collision(state->scene, body2, body, ELASTICITY);
+        }
+      }
+      break;
     default:
       break;
     }
@@ -415,6 +456,8 @@ void render_assets(list_t *assets) {
     asset_render(list_get(assets, i));
   }
 }
+
+
 
 /** 
  * Renders score as a progress bar at the top of the screen.
@@ -443,6 +486,18 @@ void render_scores(state_t *state) {
   sdl_draw_polygon(rectangle_2, p2_color);
 }
 
+vector_t calc_cam_size(state_t *state){
+  vector_t diff = vec_subtract(body_get_centroid(state->player1), body_get_centroid(state->player2));
+  diff.x = fmax(fabs(diff.x) * 1.3, 100);
+  diff.y = fabs(diff.y) * 1.3;
+  if(diff.x > 2*diff.y){
+    return (vector_t) {diff.x, diff.x/2};
+  }
+  else{
+    return (vector_t) {2*diff.y, diff.y};
+  }
+}
+
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
@@ -458,9 +513,12 @@ state_t *emscripten_init() {
   state->scene = scene_init();
   
   home_init(state);
-  // init_map(state);
-  // state->player1 = scene_get_body(state->scene, 0);
-  // state->player2 = scene_get_body(state->scene, 1);
+  init_map(state);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
+
+  state->shoot_sound = Mix_LoadWAV(SHOOT_SOUND_PATH);
+  state->boost_sound = Mix_LoadWAV(BOOST_SOUND_PATH);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
@@ -486,7 +544,9 @@ bool emscripten_main(state_t *state) {
 
       sdl_clear();
       render_assets(state->game_assets);
-      sdl_render_scene(state->scene, NULL);
+      vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
+      sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
+      //sdl_render_scene(state->scene, NULL);
       render_scores(state);
       sdl_show();
 
@@ -498,12 +558,15 @@ bool emscripten_main(state_t *state) {
       break;
     }
   }
+
   return false;
 }
 
 void emscripten_free(state_t *state) {
   list_free(state->home_assets);
   list_free(state->game_assets);
+  Mix_FreeChunk(state->shoot_sound);
+  Mix_FreeChunk(state->boost_sound);
   scene_free(state->scene);
   asset_cache_destroy();
   free(state);
