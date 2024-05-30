@@ -19,7 +19,10 @@ const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
+const SDL_Rect TITLE_BOX = (SDL_Rect){100, 100, MAX.x / 2, MAX.y / 4};
+const size_t SCORE_HEIGHT = 75; // height of entire score bar
 
+const vector_t VEC_ZERO = (vector_t){.x = 0.0, .y = 0.0};
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 
@@ -236,7 +239,7 @@ void create_buttons(state_t *state) {
 void home_init(state_t *state) {
   create_buttons(state);
 
-  asset_t *title = asset_make_image(TITLE_PATH, (SDL_Rect){100, 100, 500, 100});
+  asset_t *title = asset_make_image(TITLE_PATH, TITLE_BOX);
   list_add(state->home_assets, title);
 }
 
@@ -342,6 +345,33 @@ void render_assets(list_t *assets) {
   }
 }
 
+/** 
+ * Renders score as a progress bar at the top of the screen.
+*/
+void render_scores(state_t *state) {
+  // player 1
+  size_t p1 = state->P1_score;
+  rgb_color_t p1_color = PLAYER_COLORS[0];
+  size_t width = p1 * (MAX.x / WIN_SCORE);
+  size_t height = SCORE_HEIGHT / 2;
+  vector_t centroid = (vector_t){.x = width / 2.0, .y = SCORE_HEIGHT / 4.0};
+  list_t *rectangle_pts = make_rectangle(centroid, width, height);
+  polygon_t *rectangle = polygon_init(rectangle_pts, VEC_ZERO, 0.0, p1_color.r, 
+                                      p1_color.g, p1_color.b);
+  sdl_draw_polygon(rectangle, p1_color.r, p1_color.g, p1_color.b);
+
+  // player 2
+  size_t p2 = state->P2_score;
+  rgb_color_t p2_color = PLAYER_COLORS[1];
+  size_t width_2 = p2 * (MAX.x / WIN_SCORE);
+  size_t height_2 = SCORE_HEIGHT / 2;
+  vector_t centroid_2 = (vector_t){.x = width_2 / 2.0, .y = 0.75 * SCORE_HEIGHT};
+  list_t *rectangle_pts_2 = make_rectangle(centroid_2, width_2, height_2);
+  polygon_t *rectangle_2 = polygon_init(rectangle_pts_2, VEC_ZERO, 0.0, p2_color.r, 
+                                      p2_color.g, p2_color.b);
+  sdl_draw_polygon(rectangle_2, p2_color.r, p2_color.g, p2_color.b);
+}
+
 state_t *emscripten_init() {
   asset_cache_init();
   sdl_init(MIN, MAX);
@@ -376,12 +406,10 @@ bool emscripten_main(state_t *state) {
     case GAME: {
       scene_tick(state->scene, dt);
 
-      if (update_score(state)) {
-
-      }
       if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
 
       render_assets(state->game_assets);
+      render_scores(state);
       sdl_render_scene(state->scene, NULL);
       break;
     }

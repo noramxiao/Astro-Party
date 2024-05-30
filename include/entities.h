@@ -6,6 +6,12 @@
 #include "body.h"
 #include "color.h"
 
+// Color constants
+const rgb_color_t RED = (rgb_color_t) {.r = 255, .g = 0, .b = 0}; 
+const rgb_color_t BLUE = (rgb_color_t) {.r = 0, .g = 0, .b = 255}; 
+const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
+const rgb_color_t GRAY = (rgb_color_t) {.r = 150, .g = 150, .b = 150};
+
 typedef enum {
 	SHIP,
 	PILOT,

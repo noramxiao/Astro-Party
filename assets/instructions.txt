@@ -1,0 +1,35 @@
+How to Play Space Wars
+
+Space Wars is a a multiplayer space battle game where players control spaceships with 
+realistic physics, aiming to outmaneuver and outgun their opponents in a variety of space 
+arenas. Here's how to play:
+
+KEYBOARD CONTROLS
+Player 1:
+ - W: Change direction
+ - Q: Shoot.
+
+Player 2:
+ - M: Change direction
+ - N: Shoot.
+
+HOW TO WIN
+
+
+GAMEPLAY TIPS
+1. **Stay on the Move:** Constantly moving makes it harder for opponents to hit you.
+2. **Strategic Shooting:** Time your shots and aim carefully to increase your chances of hitting your target.
+3. **Use Boost Wisely:** Boosting can help you dodge bullets and reposition quickly, but it has a cooldown. Use it strategically.
+4. **Know the Maps:** Familiarize yourself with different map layouts. Knowing where obstacles and cover are can give you a tactical advantage.
+5. **Team Coordination:** In team modes, communicate with your teammates. Coordinated attacks and defenses are much more effective.
+
+#### Advanced Techniques
+- **Ricochet Shots:** Some levels have walls that can bounce your shots. Use them to hit opponents around corners.
+- **Boost Dodge:** Perfect timing on your boosts can help you dodge incoming shots and make quick escapes.
+- **Trap Setting:** Lure opponents into tight spaces or traps where they have less room to maneuver.
+
+#### Game Settings
+Customize your game experience by adjusting the settings:
+- **Match Duration:** Set how long each match lasts.
+- **Respawn Time:** Adjust the time it takes for players to respawn.
+- **Power-Ups:** Enable or disable power-ups that can give players temporary advantages.
