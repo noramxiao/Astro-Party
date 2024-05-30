@@ -256,28 +256,20 @@ state_t *emscripten_init() {
   return state;
 }
 
-void update_score(state_t *state) {
-  bool p1 = false;
-  bool p2 = false;
-  size_t n_bodies = scene_bodies(state->scene);
-
-  
-  // for (size_t i = 0; i < n_bodies; i++) {
-  //   void *info = body_get_info(scene_get_body(state->scene, i));
-  //   if (info == P1_SHIP || info == P1_PILOT) {
-  //     p1 = true;
-  //   } else if (info == P2_SHIP || info == P2_PILOT) {
-  //     p2 = true;
-  //   }
-  // }
+bool update_score(state_t *state) {
+  bool p1 = state->player1 != NULL;
+  bool p2 = state->player2 != NULL;
 
   if (!(p1 && p2)) {
     if (p1) {
       state->P1_score++;
+      return true;
     } else if (p2) {
       state->P2_score++;
+      return true;
     }
   }
+  return false;
 }
 
 void render_assets(list_t *assets) {
@@ -297,7 +289,9 @@ bool emscripten_main(state_t *state) {
     case GAME: {
       scene_tick(state->scene, dt);
 
-      update_score(state);
+      if (update_score(state)) {
+        
+      }
       if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
 
       render_assets(state->game_assets);
