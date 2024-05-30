@@ -43,24 +43,28 @@ entity_type_t get_type(body_t *body) {
 }
 
 body_t *make_ship(vector_t centroid, size_t player_idx, vector_t init_velocity) {
-	list_t *ship = make_triangle(centroid, SHIP_BASE, SHIP_HEIGHT);
+	list_t *ship = make_triangle(SHIP_BASE, SHIP_HEIGHT);
 	entity_info_t *ship_info = entity_info_init(SHIP, player_idx);
 	rgb_color_t color = PLAYER_COLORS[player_idx];
 	body_t *ret = body_init_with_info(ship, SHIP_MASS, color, ship_info, entity_info_free);
+	body_set_centroid(ret, centroid);
 	return ret;
 }
 
 body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t init_velocity) {
-	list_t *pilot = make_rectangle(centroid, PILOT_RECT_DIMS);
+	list_t *pilot = make_rectangle(PILOT_RECT_DIMS.x, PILOT_RECT_DIMS.y);
 	entity_info_t *pilot_info = entity_info_init(PILOT, player_idx);
 	rgb_color_t color = PLAYER_COLORS[player_idx];
 	body_t *ret = body_init_with_info(pilot, PILOT_MASS, color, pilot_info, entity_info_free);
+	body_set_centroid(ret, centroid);
 	return ret;
 }
 
 body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity) {
-	list_t *asteroid = make_circle(centroid, radius);
+	list_t *asteroid = make_circle(radius);
 	entity_info_t *asteroid_info = entity_info_init(ASTEROID, NULL);
 	double mass = radius * radius * ASTEROID_MASS_DENSITY;
 	body_t *ret = body_init_with_info(asteroid, mass, GRAY, asteroid_info, entity_info_free);
+	body_set_centroid(ret, centroid);
+	return ret;
 }
