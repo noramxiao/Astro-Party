@@ -8,12 +8,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-// color constants
-const rgb_color_t RED = (rgb_color_t) {.r = 1, .g = 0, .b = 0}; 
-const rgb_color_t BLUE = (rgb_color_t) {.r = 0, .g = 0, .b = 1}; 
-const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
-const rgb_color_t GRAY = (rgb_color_t) {.r = 0.5, .g = 0.5, .b = 0.5};
-
 // ship constants
 const double SHIP_MASS = 10;
 const double SHIP_BASE = 20;

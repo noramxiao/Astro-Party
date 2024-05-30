@@ -6,7 +6,7 @@
  * Creates a rectangular shaped list given a width and height in the form of 
  * a vector.
  * 
- * @param centroid width of rectangle
+ * @param centroid centroid of rectangle
  * @param width width of rectangle
  * @param height height of rectangle
  * @return a pointer to the rectangle list
