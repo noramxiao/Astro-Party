@@ -32,13 +32,20 @@ const double INIT_SHIP_ANGLES[] = {
   3 * M_PI / 4
 };
 const double PLAYER_ROT_SPEED = -3 * M_PI;
+const double BOOST_MAGNITUDE = 2000;
+const double BOOST_ANGLE = -M_PI / 2;
+const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
+
+// sound constants
+const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
+const char *BOOST_SOUND_PATH = "assets/sounds/boost.wav";
 
 const double INIT_BULLET_SPEED = 500;
 
 const double WALL_DIM = 1;
 
 const double ELASTICITY = 1;
-const double THRUST_POWER = 500;
+const double THRUST_POWER = 600;
 const double DRAG_COEF = 5;
 
 const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
@@ -73,6 +80,9 @@ struct state {
 
   body_t *player1;
   body_t *player2;
+  
+  Mix_Chunk *shoot_sound;
+  Mix_Chunk *boost_sound;
 
   scene_t *scene;
   double dt;
@@ -260,30 +270,56 @@ void on_key(Uint8 *key_state, state_t *state) {
   body_t *p2 = state->player2;
   double dt = state->dt;
 
-  if (key_state[SDL_SCANCODE_W]) {
+  if (key_state[P1_TURN]) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p1);
     body_set_rotation(p1, curr_angle + da);
-    // vector_t curr_velocity = body_get_velocity(p1);
-    // vector_t new_velocity = vec_rotate(curr_velocity, da);
-    // body_set_velocity(p1, new_velocity);
+    set_last_press(P1_TURN);
+  } else {
+    double now = clock(); 
+    double time_since_last_press = now - get_last_press(P1_TURN);
+    double time_since_last_release = now - get_last_release(P1_TURN);
+    if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
+      double curr_angle = body_get_rotation(p1);
+      double new_angle = curr_angle + BOOST_ANGLE;
+      body_set_rotation(p1, new_angle);
+      vector_t boost_impulse = vec_make(BOOST_MAGNITUDE, new_angle);
+      body_add_impulse(p1, boost_impulse);
+      sdl_play_sound(state->boost_sound);
+    }
+    set_last_release(P1_TURN);
   }
 
-  if (key_state[SDL_SCANCODE_M]) {
+  if (key_state[P2_TURN]) {
     double da = PLAYER_ROT_SPEED * dt;
     double curr_angle = body_get_rotation(p2);
     body_set_rotation(p2, curr_angle + da);
-    // vector_t curr_velocity = body_get_velocity(p2);
-    // vector_t new_velocity = vec_rotate(curr_velocity, da);
-    // body_set_velocity(p2, new_velocity);
+    set_last_press(P2_TURN);
+  } else {
+    double now = clock();
+    double time_since_last_press = now - get_last_press(P2_TURN);
+    double time_since_last_release = now - get_last_release(P2_TURN);
+    if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
+      double curr_angle = body_get_rotation(p2);
+      double new_angle = curr_angle + BOOST_ANGLE;
+      body_set_rotation(p2, new_angle);
+      vector_t boost_impulse = vec_make(BOOST_MAGNITUDE, new_angle);
+      body_add_impulse(p2, boost_impulse);
+      sdl_play_sound(state->boost_sound);
+    }
+    set_last_release(P2_TURN);
   }
 
-  if (key_state[SDL_SCANCODE_Q]) {
+  if (key_state[P1_SHOOT]) {
     add_bullet(state, p1);
+    sdl_play_sound(state->shoot_sound);
+    set_last_press(P1_SHOOT);
   }
 
-  if (key_state[SDL_SCANCODE_N]) {
+  if (key_state[P2_SHOOT]) {
     add_bullet(state, p2);
+    sdl_play_sound(state->shoot_sound);
+    set_last_press(P2_SHOOT);
   }
 }
 
@@ -314,7 +350,6 @@ void on_click(state_t *state, double x, double y) {
       break;
   }
 }
-
 
 /**
  * Using `info`, initializes a button in the scene.
@@ -468,6 +503,9 @@ state_t *emscripten_init() {
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
 
+  state->shoot_sound = Mix_LoadWAV(SHOOT_SOUND_PATH);
+  state->boost_sound = Mix_LoadWAV(BOOST_SOUND_PATH);
+
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
   add_force_creators(state);
@@ -513,6 +551,8 @@ bool emscripten_main(state_t *state) {
 void emscripten_free(state_t *state) {
   list_free(state->home_assets);
   list_free(state->game_assets);
+  Mix_FreeChunk(state->shoot_sound);
+  Mix_FreeChunk(state->boost_sound);
   scene_free(state->scene);
   asset_cache_destroy();
   free(state);

@@ -1,6 +1,7 @@
 #include "sdl_wrapper.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_mixer.h>
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -43,6 +44,14 @@ uint32_t key_start_timestamp;
  * Initially 0.
  */
 clock_t last_clock = 0;
+/**
+ * The last time each keyidx was pressed
+*/
+double last_presses[] = {0, 0, 0, 0};
+/**
+ * The last time each keyidx was released
+*/
+double last_releases[] = {0, 0, 0, 0};
 
 /** Computes the center of the window in pixel coordinates */
 vector_t get_window_center(void) {
@@ -81,6 +90,21 @@ vector_t get_window_position(vector_t scene_pos, vector_t window_center) {
   return pixel;
 }
 
+size_t get_keyidx(player_key_t key) {
+  switch(key) {
+    case P1_TURN:
+      return 0;
+    case P1_SHOOT:
+      return 1;
+    case P2_TURN:
+      return 2;
+    case P2_SHOOT:
+      return 3;
+    default:
+      return -1;
+  }
+}
+
 /**
  * Converts an SDL key code to a char.
  * 7-bit ASCII characters are just returned
@@ -114,6 +138,7 @@ void sdl_init(vector_t min, vector_t max) {
                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                             SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+  Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
   TTF_Init();
 }
 
@@ -298,6 +323,30 @@ void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector
 
 void sdl_on_key(key_handler_t handler) { key_handler = handler; }
 void sdl_on_click(click_handler_t handler) { click_handler = handler; }
+
+double get_last_press(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  return last_presses[idx];
+}
+
+void set_last_press(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  last_presses[idx] = clock();
+}
+
+double get_last_release(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  return last_releases[idx];
+}
+
+void set_last_release(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  last_releases[idx] = clock();
+}
+
+void sdl_play_sound(Mix_Chunk *sound) {
+  Mix_PlayChannel(-1, sound, 0);
+}
 
 SDL_Rect get_bounding_box(body_t *body) {
   double min_x = DBL_MAX;
