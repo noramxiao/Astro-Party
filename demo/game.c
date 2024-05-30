@@ -23,6 +23,7 @@ const double SHIP_MASS = 10.0;
 const size_t CIRC_NPOINTS = 100;
 
 rgb_color_t PLAYER_COLORS[] = (rgb_color_t[]){(rgb_color_t){1, 0, 0}, (rgb_color_t){0, 0, 1}};
+rgb_color_t white = (rgb_color_t){1, 1, 1};
 
 enum mode {
   HOME,
@@ -45,20 +46,14 @@ struct state {
 
   map_t map;
   
-  list_t *assets;
+  list_t *home_assets;
+  list_t *game_assets;
 
   body_t *ship1;
   body_t *ship2;
 
   scene_t *scene;
 };
-
-typedef struct map {
-  size_t num_blocks;
-  const char *bg_path;
-  vector_t *block_locations;
-  vector_t *block_sizes;
-} map_t;
 
 typedef struct button_info {
   const char *image_path;
@@ -71,7 +66,6 @@ typedef struct button_info {
 } button_info_t;
 
 void toggle_play(state_t *state);
-
 
 map_t maps[] = {
   {
@@ -139,19 +133,19 @@ void add_bounds(state_t *state) {
   list_t *wall1_shape =
       make_rectangle((vector_t){MAX.x, MAX.y / 2}, WALL_DIM, MAX.y);
   body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, white,
-                                      entity_info_init(WALL), free);
+                                      entity_info_init(WALL, -1), free);
   list_t *wall2_shape =
       make_rectangle((vector_t){0, MAX.y / 2}, WALL_DIM, MAX.y);
   body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, white,
-                                      entity_info_init(WALL), free);
+                                      entity_info_init(WALL, -1), free);
   list_t *ceiling_shape =
       make_rectangle((vector_t){MAX.x / 2, MAX.y}, MAX.x, WALL_DIM);
   body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, white,
-                                        entity_info_init(WALL), free);
+                                        entity_info_init(WALL, -1), free);
   list_t *ground_shape =
       make_rectangle((vector_t){MAX.x / 2, 0}, MAX.x, WALL_DIM);
   body_t *ground = body_init_with_info(ground_shape, INFINITY, white,
-                                       entity_info_init(WALL), free);
+                                       entity_info_init(WALL, -1), free);
   scene_add_body(state->scene, wall1);
   scene_add_body(state->scene, wall2);
   scene_add_body(state->scene, ceiling);
@@ -175,6 +169,12 @@ void init_map(state_t *state, map_t map){
                                       entity_info_init(WALL), free);
     scene_add_body(state->scene, block);
   }
+
+  SDL_Rect background_bbox = (SDL_Rect){
+      .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
+  asset_t *background_asset =
+      asset_make_image(map.bg_path, background_bbox);
+  list_add(state->assets, background_asset);
 }
 
 void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
@@ -208,9 +208,9 @@ void toggle_play(state_t *state) {
 }
 
 void handle_buttons(state_t *state, double x, double y) {
-  size_t n_assets = list_size(state->assets);
+  size_t n_assets = list_size(state->home_assets);
   for (size_t i = 0; i < n_assets; i++) {
-    asset_t *asset = list_get(state->assets, i);
+    asset_t *asset = list_get(state->home_assets, i);
     if (asset_get_type(asset) == ASSET_BUTTON) {
       asset_on_button_click(asset, state, x, y);
     }
@@ -257,7 +257,7 @@ void create_buttons(state_t *state) {
   for (size_t i = 0; i < n_buttons; i++) {
     button_info_t info = button_templates[i];
     asset_t *button = create_button_from_info(state, info);
-    list_add(state->assets, button);
+    list_add(state->home_assets, button);
   }
 }
 
@@ -273,7 +273,7 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
-  state->assets = list_init(INITIAL_CAPACITY, asset_)
+  state->home_assets = list_init(INITIAL_CAPACITY, asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
   assert(state->scene);
@@ -281,14 +281,6 @@ state_t *emscripten_init() {
   init_map(state, state->map);
   state->ship1 = scene_get_body(state->scene, 0);
   state->ship2 = scene_get_body(state->scene, 1);
-
-
-  // BACKGROUND
-  SDL_Rect background_bbox = (SDL_Rect){
-      .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
-  asset_t *background_asset =
-      asset_make_image(BACKGROUND_PATH, background_bbox);
-  list_add(state->assets, background_asset);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
@@ -318,11 +310,11 @@ void update_score(state_t *state) {
   }
 }
 
-void render_scene(state_t *state, void *aux) {
-  switch (state->mode) {
-    case HOME:
-
-  }  
+void render_assets(list_t *assets) {
+  size_t n_assets = list_size(assets);
+  for (size_t i = 0; i < n_assets; i++) {
+    asset_render(list_get(assets, i));
+  }
 }
 
 bool emscripten_main(state_t *state) {
@@ -330,23 +322,24 @@ bool emscripten_main(state_t *state) {
 
   switch (state->mode) {
     case HOME: {
-
+      render_assets(state->home_assets);
     }
     case GAME: {
+      scene_tick(state->scene, dt);
 
+      update_score(state);
+      if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
+
+      render_assets(state->game_assets);
+      sdl_render_scene(state->scene, NULL);
     }
   }
-  scene_tick(state->scene, dt);
-
-  update_score(state);
-  if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
-
-  render_scene(state->scene, NULL);
   return false;
 }
 
 void emscripten_free(state_t *state) {
-  list_free(state->assets);
+  list_free(state->home_assets);
+  list_free(state->game_assets);
   scene_free(state->scene);
   asset_cache_destroy();
   free(state);
