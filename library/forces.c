@@ -171,7 +171,7 @@ void create_thrust(scene_t *scene, double power, body_t *body) {
   list_add(bodies, body);
   list_add(aux_bodies, body);
   body_aux_t *aux = body_aux_init(power, aux_bodies);
-  scene_add_bodies_force_creator(scene, (force_creator_t)drag_force, aux,
+  scene_add_bodies_force_creator(scene, (force_creator_t)thrust_force, aux,
                                  bodies);
 }
 

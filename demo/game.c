@@ -23,8 +23,8 @@ const char *TITLE_PATH = "assets/title.png";
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 const double ELASTICITY = 0.2;
-const double THRUST_POWER = 100;
-const double DRAG_COEF = 0;
+const double THRUST_POWER = 10;
+const double DRAG_COEF = 0.2;
 
 rgb_color_t white = (rgb_color_t){0, 1, 1};
 
@@ -362,7 +362,6 @@ state_t *emscripten_init() {
   init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
-  body_set_velocity(state->player1, (vector_t){40, 0});
 
   
   sdl_on_key((key_handler_t)on_key);
