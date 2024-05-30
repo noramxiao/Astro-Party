@@ -190,6 +190,7 @@ void on_click(state_t *state, double x, double y) {
   switch (state->mode) {
     case HOME:
       handle_buttons(state, x, y);
+      break;
   }
 }
 
@@ -290,7 +291,7 @@ bool emscripten_main(state_t *state) {
       scene_tick(state->scene, dt);
 
       if (update_score(state)) {
-        
+
       }
       if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
 
