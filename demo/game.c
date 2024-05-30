@@ -251,7 +251,7 @@ state_t *emscripten_init() {
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
-  home_init();
+  home_init(state);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
