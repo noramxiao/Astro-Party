@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <SDL2/SDL.h>
 
 #include "asset.h"
 #include "asset_cache.h"
@@ -12,6 +13,7 @@
 #include "sdl_wrapper.h"
 #include "entities.h"
 #include "shapes.h"
+
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
 
@@ -23,11 +25,26 @@ const SDL_Rect TITLE_BOX = (SDL_Rect){100, 100, MAX.x / 2, MAX.y / 4};
 const size_t SCORE_HEIGHT = 75; // height of entire score bar
 
 const vector_t VEC_ZERO = (vector_t){.x = 0.0, .y = 0.0};
-const size_t CIRC_NPOINTS = 100;
+const vector_t INIT_VELOS[] = {
+  (vector_t) {.x = 80, .y = 80},
+  (vector_t) {.x = -80, .y = -80},
+  (vector_t) {.x = 80, .y = -80},
+  (vector_t) {.x = -80, .y = 80},
+};
+
+const double INIT_ANGLES[] = {
+  M_PI / 4 - M_PI / 2, 
+  5 * M_PI / 4 - M_PI / 2, 
+  7 * M_PI / 4 - M_PI / 2,
+  3 * M_PI / 4 - M_PI / 2
+};
+
+const double PLAYER_ROT_SPEED = -3 * M_PI;
+
 const double WALL_DIM = 1;
 const double ELASTICITY = 0.2;
-const double THRUST_POWER = 10;
-const double DRAG_COEF = 0.2;
+const double THRUST_POWER = 50;
+const double DRAG_COEF = 1;
 
 rgb_color_t white = (rgb_color_t){0, 1, 1};
 
@@ -39,6 +56,7 @@ enum mode {
 
 typedef struct map {
   size_t num_blocks;
+  size_t num_asteroids;
   const char *bg_path;
   vector_t *block_locations;
   vector_t *block_sizes;
@@ -59,6 +77,7 @@ struct state {
   body_t *player2;
 
   scene_t *scene;
+  double dt;
 };
 
 typedef struct button_info {
@@ -76,6 +95,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
+    .num_asteroids = 5,
     .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
@@ -88,6 +108,8 @@ map_t maps[] = {
   }
 };
 
+double rand_double() { return (double)rand() / RAND_MAX; }
+
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
      .image_box = (SDL_Rect){0, 200, 100, 100},
@@ -95,7 +117,7 @@ button_info_t button_templates[] = {
 };
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
-  body_t *ship_body = make_ship(pos, team, (vector_t){0, 0});
+  body_t *ship_body = make_ship(pos, team, INIT_VELOS[team], INIT_ANGLES[team]);
   scene_add_body(state->scene, ship_body);
 }
 
@@ -138,6 +160,28 @@ void add_obstacles(state_t *state){
   }
 }
 
+void add_asteroids(state_t *state){
+  for(size_t i = 0; i < state->map.num_asteroids; i++){
+    bool pos_found = false;
+    vector_t pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
+    body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, (vector_t){0, 0});
+    while(!pos_found){
+      pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
+      body_set_centroid(asteroid, pos);
+      size_t n_bodies = scene_bodies(state->scene);
+
+      for (size_t i = 0; i < n_bodies; i++) {
+        body_t *body = scene_get_body(state->scene, i);
+        if(find_collision(body, asteroid).collided){
+          continue;
+        }
+      }
+      pos_found = true;
+    }
+    scene_add_body(state->scene, asteroid);
+  }
+}
+
 void init_map(state_t *state){
   map_t map = state->map;
 
@@ -147,6 +191,7 @@ void init_map(state_t *state){
 
   add_obstacles(state);
 
+  add_asteroids(state);
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
   asset_t *background_asset =
@@ -154,30 +199,28 @@ void init_map(state_t *state){
   list_add(state->game_assets, background_asset);
 }
 
-void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
-  // /*TODO: edit with Space Wars implementation*/
-  // body_t *froggy = scene_get_body(state->scene, 0);
-  // vector_t translation = (vector_t){0, 0};
-  // if (type == KEY_PRESSED && type != KEY_RELEASED) {
-  //   switch (key) {
-  //   case P1_TURN:
-  //     translation.x = -H_STEP;
-  //     break;
-  //   case RIGHT_ARROW:
-  //     translation.x = H_STEP;
-  //     break;
-  //   case UP_ARROW:
-  //     translation.y = V_STEP;
-  //     break;
-  //   case DOWN_ARROW:
-  //     if (body_get_centroid(froggy).y > START_POS.y) {
-  //       translation.y = -V_STEP;
-  //     }
-  //     break;
-  //   }
-  //   vector_t new_centroid = vec_add(body_get_centroid(froggy), translation);
-  //   body_set_centroid(froggy, new_centroid);
-  // }
+void on_key(Uint8 *key_state, state_t *state) {
+  body_t *p1 = state->player1;
+  body_t *p2 = state->player2;
+  double dt = state->dt;
+
+  if (key_state[SDL_SCANCODE_W]) {
+    double da = PLAYER_ROT_SPEED * dt;
+    double curr_angle = body_get_rotation(p1);
+    body_set_rotation(p1, curr_angle + da);
+    vector_t curr_velocity = body_get_velocity(p1);
+    vector_t new_velocity = vec_rotate(curr_velocity, da);
+    body_set_velocity(p1, new_velocity);
+  }
+
+  if (key_state[SDL_SCANCODE_M]) {
+    double da = PLAYER_ROT_SPEED * dt;
+    double curr_angle = body_get_rotation(p2);
+    body_set_rotation(p2, curr_angle + da);
+    vector_t curr_velocity = body_get_velocity(p2);
+    vector_t new_velocity = vec_rotate(curr_velocity, da);
+    body_set_velocity(p2, new_velocity);
+  }
 }
 
 void toggle_play(state_t *state) {
@@ -202,7 +245,12 @@ void on_click(state_t *state, double x, double y) {
     case HOME:
       handle_buttons(state, x, y);
       break;
-    
+    case GAME:
+      break;
+    case POST_GAME:
+      break;
+    default:
+      break;
   }
 }
 
@@ -393,15 +441,12 @@ state_t *emscripten_init() {
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
 
-  
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
   add_force_creators(state);
   
-  printf("Finished init\n");
   return state;
 }
-
 
 bool emscripten_main(state_t *state) {
   double dt = time_since_last_tick();
@@ -419,6 +464,11 @@ bool emscripten_main(state_t *state) {
       render_assets(state->game_assets);
       render_scores(state);
       sdl_render_scene(state->scene, NULL);
+      state->dt = dt;
+      sdl_is_done(state);
+      break;
+    }
+    case POST_GAME: {
       break;
     }
   }
