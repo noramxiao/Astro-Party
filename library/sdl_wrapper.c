@@ -131,18 +131,9 @@ bool sdl_is_done(void *state) {
       // or an unrecognized key was pressed
       if (key_handler == NULL)
         break;
-      char key = get_keycode(event->key.keysym.sym);
-      if (key == '\0')
-        break;
-
-      uint32_t timestamp = event->key.timestamp;
-      if (!event->key.repeat) {
-        key_start_timestamp = timestamp;
-      }
-      key_event_type_t type =
-          event->type == SDL_KEYDOWN ? KEY_PRESSED : KEY_RELEASED;
-      double held_time = (timestamp - key_start_timestamp) / MS_PER_S;
-      key_handler(key, type, held_time, state);
+      
+      const Uint8 *key_state = SDL_GetKeyboardState(NULL);
+      key_handler(key_state, state);
       break;
     case SDL_MOUSEBUTTONDOWN:
       if (click_handler == NULL) {
