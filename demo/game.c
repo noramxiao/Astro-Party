@@ -268,40 +268,40 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
 
 void reset_game(body_t *body1, body_t *body2, vector_t axis, void *aux,
                 double force_const) {
-  // When reset_game was "registered" as a collision handler, the game state
-  // should have been passed in as the aux. This gives us access to the
-  // state after the collision between the ball and the ground, allowing us
-  // to reset the game.
-  state_t *state = aux;
+  // // When reset_game was "registered" as a collision handler, the game state
+  // // should have been passed in as the aux. This gives us access to the
+  // // state after the collision between the ball and the ground, allowing us
+  // // to reset the game.
+  // state_t *state = aux;
 
-  // clear and re-add bricks. Which function initializes bricks in the
-  // beginning of the game?
-  size_t n_bodies = scene_bodies(state->scene);
+  // // clear and re-add bricks. Which function initializes bricks in the
+  // // beginning of the game?
+  // size_t n_bodies = scene_bodies(state->scene);
 
-  for (size_t i = 0; i < n_bodies; i++) {
-    body_t *body = scene_get_body(state->scene, i);
-    if (get_type(body) == BRICK) {
-      body_remove(body);
-    }
-  }
-  add_bricks(state);
+  // for (size_t i = 0; i < n_bodies; i++) {
+  //   body_t *body = scene_get_body(state->scene, i);
+  //   if (get_type(body) == BRICK) {
+  //     body_remove(body);
+  //   }
+  // }
+  // add_bricks(state);
 
-  // reset ball's velocity and position
-  body_set_centroid(state->ball, BALL_INIT_POS);
-  body_set_velocity(state->ball, BALL_INIT_VEL);
+  // // reset ball's velocity and position
+  // body_set_centroid(state->ball, BALL_INIT_POS);
+  // body_set_velocity(state->ball, BALL_INIT_VEL);
 
-  // reset ball's forces and impulses
-  body_reset(state->ball);
+  // // reset ball's forces and impulses
+  // body_reset(state->ball);
 
-  // re-add force creators for bricks
-  n_bodies = scene_bodies(state->scene);
+  // // re-add force creators for bricks
+  // n_bodies = scene_bodies(state->scene);
 
-  for (size_t i = 0; i < n_bodies; i++) {
-    body_t *body = scene_get_body(state->scene, i);
-    if (get_type(body) == BRICK) {
-      create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
-    }
-  }
+  // for (size_t i = 0; i < n_bodies; i++) {
+  //   body_t *body = scene_get_body(state->scene, i);
+  //   if (get_type(body) == BRICK) {
+  //     create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
+  //   }
+  // }
 }
 
 
