@@ -174,6 +174,9 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
+  init_map(state, state->map);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
 }
 
 void handle_buttons(state_t *state, double x, double y) {
@@ -248,17 +251,16 @@ state_t *emscripten_init() {
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
-  assert(state->scene);
-
-  init_map(state, state->map);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
+  home_init();
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
   return state;
 }
 
+/** 
+ * Updates score if someone is killed. Returns true if score is updated.
+*/
 bool update_score(state_t *state) {
   bool p1 = state->player1 != NULL;
   bool p2 = state->player2 != NULL;
@@ -288,6 +290,7 @@ bool emscripten_main(state_t *state) {
   switch (state->mode) {
     case HOME: {
       render_assets(state->home_assets);
+      break;
     }
     case GAME: {
       scene_tick(state->scene, dt);
@@ -299,6 +302,7 @@ bool emscripten_main(state_t *state) {
 
       render_assets(state->game_assets);
       sdl_render_scene(state->scene, NULL);
+      break;
     }
   }
   return false;
