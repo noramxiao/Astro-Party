@@ -362,6 +362,8 @@ state_t *emscripten_init() {
   init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
+  body_set_velocity(state->player1, (vector_t){50, 0});
+
   
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
