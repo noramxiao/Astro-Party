@@ -24,7 +24,7 @@ const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 const double ELASTICITY = 0.2;
 const double THRUST_POWER = 100;
-const double DRAG_COEF = 0.0005;
+const double DRAG_COEF = 0;
 
 rgb_color_t white = (rgb_color_t){0, 1, 1};
 
@@ -142,7 +142,7 @@ void init_map(state_t *state){
   add_ship(state, map.start_pos[1], 1);
 
 
-  add_obstacles(state);
+  //add_obstacles(state);
 
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
