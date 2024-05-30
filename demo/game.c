@@ -27,8 +27,6 @@ enum mode {
   POST_GAME
 };
 
-
-
 struct state {
   enum mode mode; // Keeps track of what page game is on
   size_t P1_score;
@@ -46,6 +44,18 @@ typedef struct map {
   vector_t *block_sizes;
 } map_t;
 
+typedef struct button_info {
+  const char *image_path;
+  const char *font_path;
+  SDL_Rect image_box;
+  SDL_Rect text_box;
+  rgb_color_t text_color;
+  const char *text;
+  button_handler_t handler;
+} button_info_t;
+
+void toggle_play(state_t *state);
+
 
 map_t maps[] = {
   {
@@ -59,6 +69,12 @@ map_t maps[] = {
     (vector_t){100, 100}}
   }
 }
+
+button_info_t button_templates[] = {
+    {.image_path = "assets/play_button.png",
+     .image_box = (SDL_Rect){0, 200, 100, 100},
+     .handler = (void *)toggle_play},
+};
 
 
 
@@ -151,15 +167,66 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
   }
 }
 
+void toggle_play(state_t *state) {
+  state->mode = GAME;
+}
+
+void handle_buttons(state_t *state, double x, double y) {
+  size_t n_assets = list_size(state->assets);
+  for (size_t i = 0; i < n_assets; i++) {
+    asset_t *asset = list_get(state->assets, i);
+    if (asset_get_type(asset) == ASSET_BUTTON) {
+      asset_on_button_click(asset, state, x, y);
+    }
+  }
+}
+
 void on_click(state_t *state, double x, double y) {
   switch (state->mode) {
     case HOME:
+      handle_buttons(state, x, y);
+  }
+}
 
+
+/**
+ * Using `info`, initializes a button in the scene.
+ *
+ * @param info the button info struct used to initialize the button
+ */
+asset_t *create_button_from_info(state_t *state, button_info_t info) {
+  asset_t *image_asset = NULL;
+  asset_t *text_asset = NULL;
+  if (info.image_path != NULL) {
+    image_asset = asset_make_image(info.image_path, info.image_box);
+  }
+  if (info.font_path != NULL) {
+    text_asset = asset_make_text(info.font_path, info.text_box, info.text,
+                                 info.text_color);
+  }
+
+  asset_t *button =
+      asset_make_button(info.image_box, image_asset, text_asset, info.handler);
+
+  asset_cache_register_button(button);
+
+  return button;
+}
+
+/**
+ * Initializes and stores the button assets in the state.
+ */
+void create_buttons(state_t *state) {
+  size_t n_buttons = sizeof(button_templates) / sizeof(button_templates[0]);
+  for (size_t i = 0; i < n_buttons; i++) {
+    button_info_t info = button_templates[i];
+    asset_t *button = create_button_from_info(state, info);
+    list_add(state->assets, button);
   }
 }
 
 void home_init(state_t *state) {
-  
+  create_buttons(state);
 }
 
 state_t *emscripten_init() {
@@ -169,6 +236,7 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
+  state->assets = list_init(INITIAL_CAPACITY, asset_)
   state->scene = scene_init();
   srand(time(NULL));
 
@@ -237,7 +305,7 @@ bool emscripten_main(state_t *state) {
 }
 
 void emscripten_free(state_t *state) {
-  list_free(state->body_assets);
+  list_free(state->assets);
   scene_free(state->scene);
   asset_cache_destroy();
   free(state);
