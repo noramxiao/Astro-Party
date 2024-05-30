@@ -343,7 +343,7 @@ state_t *emscripten_init() {
   sdl_init(MIN, MAX);
   srand(time(NULL));
   state_t *state = malloc(sizeof(state_t));
-  state->mode = HOME;
+  state->mode = GAME;
   state->P1_score = 0;
   state->P2_score = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
