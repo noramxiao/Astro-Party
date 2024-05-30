@@ -142,7 +142,7 @@ void init_map(state_t *state){
   add_ship(state, map.start_pos[1], 1);
 
 
-  //add_obstacles(state);
+  add_obstacles(state);
 
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
