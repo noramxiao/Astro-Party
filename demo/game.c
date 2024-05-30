@@ -321,8 +321,8 @@ void add_force_creators(state_t *state) {
     body_t *body = scene_get_body(state->scene, i);
     switch (get_type(body)) {
     case SHIP:
-      create_thrust(state->scene, THRUST_POWER, body);
-      create_drag(state->scene, DRAG_COEF, body);
+      //create_thrust(state->scene, THRUST_POWER, body);
+      //create_drag(state->scene, DRAG_COEF, body);
       for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
