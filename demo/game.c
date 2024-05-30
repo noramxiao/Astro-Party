@@ -23,8 +23,8 @@ const char *TITLE_PATH = "assets/title.png";
 const size_t CIRC_NPOINTS = 100;
 const double WALL_DIM = 1;
 const double ELASTICITY = 0.2;
-const double THRUST_POWER = 10;
-const double DRAG_COEF = 0.2;
+const double THRUST_POWER = 50;
+const double DRAG_COEF = 1;
 
 rgb_color_t white = (rgb_color_t){0, 1, 1};
 
@@ -36,6 +36,7 @@ enum mode {
 
 typedef struct map {
   size_t num_blocks;
+  size_t num_asteroids;
   const char *bg_path;
   vector_t *block_locations;
   vector_t *block_sizes;
@@ -73,6 +74,7 @@ void toggle_play(state_t *state);
 map_t maps[] = {
   {
     .num_blocks = 3,
+    .num_asteroids = 5
     .bg_path = "assets/space.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
@@ -84,6 +86,8 @@ map_t maps[] = {
     (vector_t){400, 200}}
   }
 };
+
+double rand_double() { return (double)rand() / RAND_MAX; }
 
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
@@ -135,6 +139,28 @@ void add_obstacles(state_t *state){
   }
 }
 
+void add_asteroids(state_t *state){
+  for(size_t i = 0; i < state->map.num_asteroids; i++){
+    bool pos_found = false;
+    vector_t pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
+    body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, (vector_t){0, 0});
+    while(!pos_found){
+      pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
+      body_set_centroid(asteroid, pos);
+      size_t n_bodies = scene_bodies(state->scene);
+
+      for (size_t i = 0; i < n_bodies; i++) {
+        body_t *body = scene_get_body(state->scene, i);
+        if(find_collision(body, asteroid)->collided){
+          continue;
+        }
+      }
+      pos_found = true;
+    }
+    scene_add_body(state->scene, asteroid);
+  }
+}
+
 void init_map(state_t *state){
   map_t map = state->map;
 
@@ -144,6 +170,7 @@ void init_map(state_t *state){
 
   add_obstacles(state);
 
+  add_asteroids(state);
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
   asset_t *background_asset =
