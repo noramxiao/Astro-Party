@@ -256,7 +256,8 @@ bool update_score(state_t *state) {
 //       return true;
 //     }
 //   }
-//   return false;
+  return false;
+
 }
 
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
