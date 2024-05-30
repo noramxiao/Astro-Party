@@ -34,7 +34,7 @@ entity_info_t *entity_info_init(entity_type_t type, size_t player_idx) {
 	return ret;
 }
 
-entity_info_free(entity_info_t *info) {
+void entity_info_free(entity_info_t *info) {
 	free(info);
 }
 
