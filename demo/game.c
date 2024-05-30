@@ -128,7 +128,7 @@ void add_bounds(state_t *state) {
 void add_obstacles(state_t *state){
   add_bounds(state);
   for(size_t i = 0; i < state->map.num_blocks; i++){
-    list_t *block_shape = make_rectangle(map.block_locations[i], state->map.block_sizes[i].x, state->map.block_sizes[i].y);
+    list_t *block_shape = make_rectangle(state->map.block_locations[i], state->map.block_sizes[i].x, state->map.block_sizes[i].y);
     body_t *block = body_init_with_info(block_shape, INFINITY, white,
                                       entity_info_init(WALL, 100), free);
     scene_add_body(state->scene, block);
@@ -179,7 +179,7 @@ void on_key(char key, key_event_type_t type, double held_time, state_t *state) {
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
-  init_map(state, state->map);
+  init_map(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
 }
@@ -274,19 +274,7 @@ bool update_score(state_t *state) {
 
 }
 
-void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
-                double force_const) {
-  state_t *state = aux;
-  entity_info_t *ship_info = body_get_info(body1);
-  entity_info_t *bullet_info = body_get_info(body2);
-  if(bullet_info->team == 0){
-    state->P1_score++;
-  }
-  if(bullet_info->team == 1){
-    state->P2_score++;
-  }
-  reset_game(state);
-}
+
 
 void reset_game(state_t *state) {
 
@@ -313,17 +301,21 @@ void reset_game(state_t *state) {
   body_reset(state->player1);
   body_reset(state->player2);
 
-  // re-add force creators for bricks
-  n_bodies = scene_bodies(state->scene);
-
-  for (size_t i = 0; i < n_bodies; i++) {
-    body_t *body = scene_get_body(state->scene, i);
-    if (get_type(body) == BRICK) {
-      create_breakout_collision(state->scene, state->ball, body, ELASTICITY);
-    }
-  }
 }
 
+void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
+                double force_const) {
+  state_t *state = aux;
+  entity_info_t *ship_info = body_get_info(body1);
+  entity_info_t *bullet_info = body_get_info(body2);
+  if(bullet_info->team == 0){
+    state->P1_score++;
+  }
+  if(bullet_info->team == 1){
+    state->P2_score++;
+  }
+  reset_game(state);
+}
 
 void add_force_creators(state_t *state) {
   for (size_t i = 0; i < scene_bodies(state->scene); i++) {
