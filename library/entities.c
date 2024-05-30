@@ -5,6 +5,7 @@
 #include "shapes.h"
 #include "entities.h"
 #include <stdlib.h>
+#include <assert.h>
 
 // color constants
 const rgb_color_t RED = (rgb_color_t) {.r = 255, .g = 0, .b = 0}; 
