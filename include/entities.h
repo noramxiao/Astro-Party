@@ -47,6 +47,15 @@ body_t *make_ship(vector_t centroid, size_t player_idx, vector_t velocity, doubl
 body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, double angle);
 
 /** 
+ * Creates a body of a circle shape for a bullet.
+ * 
+ * @param centroid centroid of the bullet
+ * @param velocity velocity of the bullet
+ * @return a pointer to the bullet body
+*/
+body_t *make_bullet(vector_t ship_centroid, double ship_angle, double init_speed);
+
+/** 
  * Creates a body for an asteroid. Will just be a grey circle for now.
  * 
  * @param centroid centroid of the asteroid

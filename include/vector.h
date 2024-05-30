@@ -100,4 +100,13 @@ vector_t vec_rotate(vector_t v, double angle);
  */
 double vec_get_length(vector_t v);
 
+/**
+ * Calculate the length of a vector.
+ *
+ * @param magnitude a double representing the magnitude of the vector
+ * @param angle a double representing the angle of the vector
+ * @return a double representing the vector's magnitude
+ */
+vector_t vec_make(double magnitude, double angle);
+
 #endif // #ifndef __VECTOR_H__

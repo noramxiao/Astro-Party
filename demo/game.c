@@ -22,26 +22,22 @@ const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
 
-const vector_t INIT_VELOS[] = {
-  (vector_t) {.x = 80, .y = 80},
-  (vector_t) {.x = -80, .y = -80},
-  (vector_t) {.x = 80, .y = -80},
-  (vector_t) {.x = -80, .y = 80},
+const double INIT_SHIP_SPEED = 0;
+const double INIT_SHIP_ANGLES[] = {
+  M_PI / 4, 
+  5 * M_PI / 4, 
+  7 * M_PI / 4,
+  3 * M_PI / 4
 };
 
-const double INIT_ANGLES[] = {
-  M_PI / 4 - M_PI / 2, 
-  5 * M_PI / 4 - M_PI / 2, 
-  7 * M_PI / 4 - M_PI / 2,
-  3 * M_PI / 4 - M_PI / 2
-};
+const double INIT_BULLET_SPEED = 300;
 
-const double PLAYER_ROT_SPEED = -3 * M_PI;
+const double PLAYER_ROT_SPEED = -2 * M_PI;
 
 const double WALL_DIM = 1;
 const double ELASTICITY = 0.2;
-const double THRUST_POWER = 50;
-const double DRAG_COEF = 1;
+const double THRUST_POWER = 300;
+const double DRAG_COEF = 4;
 
 rgb_color_t white = (rgb_color_t){0, 1, 1};
 
@@ -114,8 +110,26 @@ button_info_t button_templates[] = {
 };
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
-  body_t *ship_body = make_ship(pos, team, INIT_VELOS[team], INIT_ANGLES[team]);
+  vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
+  body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team]);
   scene_add_body(state->scene, ship_body);
+}
+
+void add_bullet(state_t *state, body_t *ship) {
+  vector_t ship_centroid = body_get_centroid(ship);
+  double ship_angle = body_get_rotation(ship);
+  body_t *bullet = make_bullet(ship_centroid, ship_angle, INIT_BULLET_SPEED);
+  scene_t *scene = state->scene;
+  scene_add_body(scene, bullet);
+  for (int i = 0; i < scene_bodies(scene); i++) {
+    body_t *body = scene_get_body(scene, i);
+    entity_info_t *info = body_get_info(body);
+    if (info->type == BULLET || info->type == ASTEROID) {
+      create_destructive_collision(scene, body, bullet);
+    } else if (info->type == SHIP) {
+      create_collision(scene, body, bullet, (collision_handler_t) score_hit, NULL, ELASTICITY);
+    }
+  }
 }
 
 void add_bounds(state_t *state) {
@@ -217,6 +231,14 @@ void on_key(Uint8 *key_state, state_t *state) {
     vector_t curr_velocity = body_get_velocity(p2);
     vector_t new_velocity = vec_rotate(curr_velocity, da);
     body_set_velocity(p2, new_velocity);
+  }
+
+  if (key_state[SDL_SCANCODE_Q]) {
+    add_bullet(state, p1);
+  }
+
+  if (key_state[SDL_SCANCODE_N]) {
+    add_bullet(state, p2);
   }
 }
 
@@ -322,10 +344,7 @@ bool update_score(state_t *state) {
 
 }
 
-
-
 void reset_game(state_t *state) {
-
   // clear and re-add bricks. Which function initializes bricks in the
   // beginning of the game?
   size_t n_bodies = scene_bodies(state->scene);
@@ -336,8 +355,6 @@ void reset_game(state_t *state) {
       body_remove(body);
     }
   }
-  
-
 
   // reset players's velocity and position
   body_set_centroid(state->player1, state->map.start_pos[0]);

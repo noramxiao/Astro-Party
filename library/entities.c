@@ -27,6 +27,9 @@ const double PILOT_CIRC_RAD = 15;
 // asteroid constants
 const double ASTEROID_MASS_DENSITY = 1;
 
+// bullet constants
+const double BULLET_RADIUS = 5;
+
 entity_info_t *entity_info_init(entity_type_t type, size_t player_idx) {
 	entity_info_t *ret = malloc(sizeof(entity_info_t));
 	assert(ret);
@@ -68,6 +71,22 @@ body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, doub
 	body_set_centroid(ret, centroid);
 	body_set_velocity(ret, velocity);
 	body_set_rotation(ret, angle);
+	return ret;
+}
+
+body_t *make_bullet(vector_t ship_centroid, double ship_angle, double init_speed) {
+	list_t *bullet = make_circle(ship_centroid, BULLET_RADIUS);
+	entity_info_t *bullet_info = entity_info_init(BULLET, 100);
+	body_t *ret = body_init_with_info(bullet, PILOT_MASS, GRAY, bullet_info, (free_func_t) entity_info_free);
+
+	double dist_from_centroid = SHIP_HEIGHT * 2 / 3 + BULLET_RADIUS + 1;
+	vector_t disp = vec_make(dist_from_centroid, ship_angle);
+	vector_t bullet_centroid = vec_add(ship_centroid, disp);
+	body_set_centroid(ret, bullet_centroid);
+	
+	vector_t velocity = vec_make(init_speed, ship_angle);
+	body_set_velocity(ret, velocity);
+
 	return ret;
 }
 
