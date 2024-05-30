@@ -117,6 +117,43 @@ void add_ship(state_t *state, vector_t pos, size_t team) {
   scene_add_body(state->scene, ship_body);
 }
 
+void reset_game(state_t *state) {
+  // clear and re-add bricks. Which function initializes bricks in the
+  // beginning of the game?
+  size_t n_bodies = scene_bodies(state->scene);
+
+  for (size_t i = 0; i < n_bodies; i++) {
+    body_t *body = scene_get_body(state->scene, i);
+    if (get_type(body) == BULLET) {
+      body_remove(body);
+    }
+  }
+
+  // reset players's velocity and position
+  body_set_centroid(state->player1, state->map.start_pos[0]);
+  body_set_velocity(state->player1, (vector_t) {0, 0});
+  body_set_centroid(state->player2, state->map.start_pos[1]);
+  body_set_velocity(state->player2, (vector_t) {0, 0});
+
+  // reset players's forces and impulses
+  body_reset(state->player1);
+  body_reset(state->player2);
+
+}
+
+void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
+                double force_const) {
+  state_t *state = aux;
+  entity_info_t *bullet_info = body_get_info(body2);
+  if(bullet_info->team == 0){
+    state->P1_score++;
+  }
+  if(bullet_info->team == 1){
+    state->P2_score++;
+  }
+  reset_game(state);
+}
+
 void add_bullet(state_t *state, body_t *ship) {
   vector_t ship_centroid = body_get_centroid(ship);
   double ship_angle = body_get_rotation(ship);
@@ -345,43 +382,6 @@ bool update_score(state_t *state) {
 //   }
   return false;
 
-}
-
-void reset_game(state_t *state) {
-  // clear and re-add bricks. Which function initializes bricks in the
-  // beginning of the game?
-  size_t n_bodies = scene_bodies(state->scene);
-
-  for (size_t i = 0; i < n_bodies; i++) {
-    body_t *body = scene_get_body(state->scene, i);
-    if (get_type(body) == BULLET) {
-      body_remove(body);
-    }
-  }
-
-  // reset players's velocity and position
-  body_set_centroid(state->player1, state->map.start_pos[0]);
-  body_set_velocity(state->player1, (vector_t) {0, 0});
-  body_set_centroid(state->player2, state->map.start_pos[1]);
-  body_set_velocity(state->player2, (vector_t) {0, 0});
-
-  // reset players's forces and impulses
-  body_reset(state->player1);
-  body_reset(state->player2);
-
-}
-
-void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
-                double force_const) {
-  state_t *state = aux;
-  entity_info_t *bullet_info = body_get_info(body2);
-  if(bullet_info->team == 0){
-    state->P1_score++;
-  }
-  if(bullet_info->team == 1){
-    state->P2_score++;
-  }
-  reset_game(state);
 }
 
 void add_force_creators(state_t *state) {
