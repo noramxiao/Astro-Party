@@ -3,6 +3,7 @@
 #include "list.h"
 #include "shapes.h"
 #include <stdlib.h>
+#include <assert.h>
 #include <math.h>
 
 const size_t CIRC_POINTS = 80;
