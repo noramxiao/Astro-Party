@@ -22,7 +22,7 @@ typedef struct entity_info {
 
 entity_type_t get_type(body_t *body);
 
-entity_info_t *entity_info_init(entity_type_t type, size_t player_idx);
+entity_info_t *entity_info_init(entity_type_t type, ssize_t player_idx);
 
 /** 
  * Creates a body for a spaceship. Will just be an isosceles triangle for now.
