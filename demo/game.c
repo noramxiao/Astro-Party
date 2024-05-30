@@ -173,7 +173,7 @@ void add_bullet(state_t *state, body_t *ship) {
     if (info->type == BULLET || info->type == ASTEROID) {
       create_destructive_collision(scene, body, bullet);
     } else if (info->type == SHIP) {
-      create_collision(scene, body, bullet, (collision_handler_t) score_hit, NULL, ELASTICITY);
+      create_collision(scene, body, bullet, (collision_handler_t) score_hit, state, ELASTICITY);
     }
   }
 }
@@ -293,7 +293,6 @@ void on_key(Uint8 *key_state, state_t *state) {
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
-
 }
 
 void handle_buttons(state_t *state, double x, double y) {
@@ -469,9 +468,9 @@ state_t *emscripten_init() {
   state->scene = scene_init();
   
   home_init(state);
-  // init_map(state);
-  // state->player1 = scene_get_body(state->scene, 0);
-  // state->player2 = scene_get_body(state->scene, 1);
+  init_map(state);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);

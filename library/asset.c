@@ -146,7 +146,6 @@ void asset_render(asset_t *asset) {
       size = (vector_t){.x = (double)(bbox.w), .y = (double)(bbox.h)};
     }
     sdl_draw_image(image_asset->texture, pos, size);
-    printf("asjbfakfbhjefbhjfebhj");
     break;
   }
   case ASSET_FONT: {
