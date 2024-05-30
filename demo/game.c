@@ -287,8 +287,10 @@ state_t *emscripten_init() {
   SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
   asset_t *background_asset =
-      asset_make_image(BACKGROUND_PATH, background_bbox);
+      asset_make_image(state->map.bg_path, background_bbox);
   list_add(state->assets, background_asset);
+
+
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
