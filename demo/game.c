@@ -90,34 +90,6 @@ button_info_t button_templates[] = {
 
 
 
-/** Make a rectangle-shaped body object.
- *
- * @param center a vector representing the center of the body.
- * @param width the width of the rectangle
- * @param height the height of the rectangle
- * @return pointer to the rectangle-shaped body
- */
-list_t *make_rectangle(vector_t center, double width, double height) {
-  list_t *points = list_init(4, free);
-  vector_t *p1 = malloc(sizeof(vector_t));
-  *p1 = (vector_t){center.x - width / 2, center.y - height / 2};
-
-  vector_t *p2 = malloc(sizeof(vector_t));
-  *p2 = (vector_t){center.x + width / 2, center.y - height / 2};
-
-  vector_t *p3 = malloc(sizeof(vector_t));
-  *p3 = (vector_t){center.x + width / 2, center.y + height / 2};
-
-  vector_t *p4 = malloc(sizeof(vector_t));
-  *p4 = (vector_t){center.x - width / 2, center.y + height / 2};
-
-  list_add(points, p1);
-  list_add(points, p2);
-  list_add(points, p3);
-  list_add(points, p4);
-
-  return points;
-}
 
 
 

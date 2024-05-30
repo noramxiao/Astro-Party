@@ -53,7 +53,7 @@ body_t *make_ship(vector_t centroid, size_t player_idx, vector_t init_velocity) 
 }
 
 body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t init_velocity) {
-	list_t *pilot = make_rectangle(PILOT_RECT_DIMS.x, PILOT_RECT_DIMS.y);
+	list_t *pilot = make_rectangle(centroid, PILOT_RECT_DIMS.x, PILOT_RECT_DIMS.y);
 	entity_info_t *pilot_info = entity_info_init(PILOT, player_idx);
 	rgb_color_t color = PLAYER_COLORS[player_idx];
 	body_t *ret = body_init_with_info(pilot, PILOT_MASS, color, pilot_info, (free_func_t)entity_info_free);
