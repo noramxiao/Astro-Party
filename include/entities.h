@@ -17,7 +17,7 @@ typedef enum {
 
 typedef struct entity_info {
 	entity_type_t type;
-	ssize_t player;
+	size_t player;
 } entity_info_t;
 
 entity_type_t get_type(body_t *body);
