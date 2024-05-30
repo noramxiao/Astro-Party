@@ -15,7 +15,7 @@
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
 
-const size_t INITIAL_CAPACITY = 5;
+const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 
@@ -271,7 +271,7 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
-  state->home_assets = list_init(INITIAL_CAPACITY, (free_func_t) asset_destroy);
+  state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
   assert(state->scene);
