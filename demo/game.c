@@ -21,7 +21,7 @@ const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
 
 const size_t CIRC_NPOINTS = 100;
-const double WALL_DIM = 100;
+const double WALL_DIM = 1;
 const double ELASTICITY = 0.2;
 const double THRUST_POWER = 50;
 const double DRAG_COEF = 1;
@@ -145,17 +145,18 @@ void add_asteroids(state_t *state){
     vector_t pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
     body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, (vector_t){0, 0});
     while(!pos_found){
+      pos_found = true;
       pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
       body_set_centroid(asteroid, pos);
       size_t n_bodies = scene_bodies(state->scene);
-
+      
       for (size_t i = 0; i < n_bodies; i++) {
         body_t *body = scene_get_body(state->scene, i);
         if(find_collision(body, asteroid).collided){
-          continue;
+          pos_found = false;
+          break;
         }
       }
-      pos_found = true;
     }
     scene_add_body(state->scene, asteroid);
   }
