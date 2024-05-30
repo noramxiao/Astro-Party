@@ -79,7 +79,7 @@ map_t maps[] = {
     .start_pos = (vector_t[]){(vector_t){100, 300}, 
     (vector_t){400, 200}}
   }
-}
+};
 
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
