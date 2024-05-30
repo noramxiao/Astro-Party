@@ -34,7 +34,7 @@ entity_info_t *entity_info_init(entity_type_t type, size_t player_idx);
  * @param init_velocity initial velocity of the spaceship
  * @return a pointer to the ship body
 */
-body_t *make_ship(vector_t centroid, size_t player_idx, vector_t init_velocity);
+body_t *make_ship(vector_t centroid, size_t player_idx, vector_t velocity, double angle);
 
 /** 
  * Creates a body for a pilot. Will just be a rectangle for now.
@@ -44,7 +44,7 @@ body_t *make_ship(vector_t centroid, size_t player_idx, vector_t init_velocity);
  * @param init_velocity initial velocity of the pilot
  * @return a pointer to the pilot body
 */
-body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t init_velocity);
+body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, double angle);
 
 /** 
  * Creates a body for an asteroid. Will just be a grey circle for now.

@@ -38,8 +38,7 @@ typedef enum { KEY_PRESSED, KEY_RELEASED } key_event_type_t;
  * @param type the type of key event (KEY_PRESSED or KEY_RELEASED)
  * @param held_time if a press event, the time the key has been held in seconds
  */
-typedef void (*key_handler_t)(char key, key_event_type_t type, double held_time,
-                              void *state);
+typedef void (*key_handler_t)(const Uint8 *key_state, void *state);
                               
 /**
  * A click handler.
