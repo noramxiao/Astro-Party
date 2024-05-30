@@ -191,6 +191,7 @@ void on_click(state_t *state, double x, double y) {
     case HOME:
       handle_buttons(state, x, y);
       break;
+    
   }
 }
 
@@ -244,6 +245,7 @@ state_t *emscripten_init() {
   state->P1_score = 0;
   state->P2_score = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
+  state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
   assert(state->scene);
