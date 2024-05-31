@@ -58,15 +58,6 @@ static vector_t get_max_min_projections(list_t *shape, vector_t unit_axis) {
 }
 
 /**
- * Helper function that normalizes vector.
- */
-static vector_t vec_unit(vector_t v) {
-  double magnitude = sqrt(v.x * v.x + v.y * v.y);
-  assert(magnitude != 0);
-  return vec_multiply(1.0 / magnitude, v);
-}
-
-/**
  * Determines whether two convex polygons intersect.
  * The polygons are given as lists of vertices in counterclockwise order.
  * There is an edge between each pair of consecutive vertices,
@@ -104,6 +95,7 @@ static collision_info_t compare_collision(list_t *shape1, list_t *shape2,
 
   list_free(edges);
 
+  collision.overlap = *min_overlap;
   collision.axis = collision_axis;
   return collision;
 }

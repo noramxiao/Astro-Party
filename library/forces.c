@@ -156,6 +156,13 @@ void create_drag(scene_t *scene, double gamma, body_t *body) {
                                  bodies);
 }
 
+/**
+ * The force creator for thrust forces on an object. Calculates
+ * the magnitude of the force components and adds the force to the
+ * associated body.
+ *
+ * @param info auxiliary information about the force and associated body
+ */
 static void thrust_force(void *info) {
   body_aux_t *aux = (body_aux_t *)info;
   body_t *body = list_get(aux->bodies, 0);
@@ -175,8 +182,28 @@ void create_thrust(scene_t *scene, double power, body_t *body) {
                                  bodies);
 }
 
+/**
+ * The torque creator for rotational drag forces on an object. Calculates
+ * the magnitude of the force components and adds the force to the
+ * associated body.
+ *
+ * @param info auxiliary information about the force and associated body
+ */
+static void drag_torque(void *info) {
+  body_aux_t *aux = (body_aux_t *)info;
+  double torque = -1 * aux->force_const * body_get_rot_speed(list_get(aux->bodies, 0));
+  body_add_torque(list_get(aux->bodies, 0), torque);
+}
 
-
+void create_rot_drag(scene_t *scene, double gamma, body_t *body) {
+  list_t *bodies = list_init(1, NULL);
+  list_t *aux_bodies = list_init(1, NULL);
+  list_add(bodies, body);
+  list_add(aux_bodies, body);
+  body_aux_t *aux = body_aux_init(gamma, aux_bodies);
+  scene_add_bodies_force_creator(scene, (force_creator_t)drag_torque, aux,
+                                 bodies);
+}
 
 /**
  * The force creator for collisions. Checks if the bodies in the collision aux
@@ -236,6 +263,19 @@ static void destructive_collision(body_t *body1, body_t *body2, vector_t axis,
 void create_destructive_collision(scene_t *scene, body_t *body1,
                                   body_t *body2) {
   create_collision(scene, body1, body2, destructive_collision, NULL, 0);
+}
+
+/**
+ * The collision handler for one-way destructive collisions.
+ */
+static void destroy_first(body_t *body1, body_t *body2, vector_t axis,
+                                  void *aux, double force_const) {
+  body_remove(body1);
+}
+
+void create_destroy_first_collision(scene_t *scene, body_t *body1,
+                                  body_t *body2) {
+  create_collision(scene, body1, body2, destroy_first, NULL, 0);
 }
 
 void physics_collision_handler(body_t *body1, body_t *body2, vector_t axis,

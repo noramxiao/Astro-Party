@@ -31,9 +31,10 @@ const double INIT_SHIP_ANGLES[] = {
   7 * M_PI / 4,
   3 * M_PI / 4
 };
-const double PLAYER_ROT_SPEED = -3 * M_PI;
-const double BOOST_MAGNITUDE = 2000;
+const double PLAYER_ROT_SPEED = -4 * M_PI;
+const double BOOST_VELOCITY = 400;
 const double BOOST_ANGLE = -M_PI / 2;
+const double BOOST_ROT_SPEED = -3 * M_PI;
 const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
 
 // sound constants
@@ -45,8 +46,9 @@ const double INIT_BULLET_SPEED = 500;
 const double WALL_DIM = 1;
 
 const double ELASTICITY = 1;
-const double THRUST_POWER = 600;
-const double DRAG_COEF = 5;
+const double THRUST_POWER = 3000;
+const double DRAG_COEF = 30;
+const double ROT_DRAG_FACTOR = 7;
 
 const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
 
@@ -166,6 +168,28 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
   reset_game(state);
 }
 
+/**
+ * Collision handler that prevents object from phasing through wall
+*/
+void wall_collision_handler(body_t *body, body_t *wall, vector_t axis, void *aux, double force_const) {
+  entity_info_t *info = body_get_info(body);
+  switch (info->type) {
+    case ASTEROID:
+    case SHIP:
+      physics_collision_handler(body, wall, axis, aux, 0.2 * ELASTICITY); // ship doesn't bounce against wall
+      collision_info_t coll_info = find_collision(body, wall);
+      double overlap = coll_info.overlap;
+      vector_t body_dir = vec_unit(body_get_velocity(body));
+      vector_t remove_overlap = vec_multiply(-overlap, body_dir);
+      vector_t new_centroid = vec_add(body_get_centroid(body), remove_overlap);
+      body_set_centroid(body, new_centroid);
+      body_set_velocity(body, VEC_ZERO);
+      break;
+    default:
+      break;
+    }
+} 
+
 void add_bullet(state_t *state, body_t *ship) {
   vector_t ship_centroid = body_get_centroid(ship);
   double ship_angle = body_get_rotation(ship);
@@ -179,6 +203,8 @@ void add_bullet(state_t *state, body_t *ship) {
     }
     if (get_type(body) == BULLET || get_type(body) == ASTEROID) {
       create_destructive_collision(scene, body, bullet);
+    } else if (get_type(body) == WALL) {
+      create_destroy_first_collision(scene, bullet, body);
     } else if (get_type(body) == SHIP) {
       create_collision(scene, body, bullet, (collision_handler_t) score_hit, state, ELASTICITY);
     }
@@ -268,43 +294,55 @@ void on_key(Uint8 *key_state, state_t *state) {
 
   body_t *p1 = state->player1;
   body_t *p2 = state->player2;
+
   double dt = state->dt;
+  double now = clock(); 
 
   if (key_state[P1_TURN]) {
-    double da = PLAYER_ROT_SPEED * dt;
+    double time_since_last_press = now - get_last_press(P1_TURN);
+    double time_since_last_release = now - get_last_release(P1_TURN);
+    double time_held = dt;
+    if (time_since_last_press < time_since_last_release) {
+      time_held = fmax(time_held, time_since_last_release / CLOCKS_PER_SEC);
+    }
+    double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
+    double da = rot_speed * dt;
     double curr_angle = body_get_rotation(p1);
     body_set_rotation(p1, curr_angle + da);
     set_last_press(P1_TURN);
   } else {
-    double now = clock(); 
     double time_since_last_press = now - get_last_press(P1_TURN);
     double time_since_last_release = now - get_last_release(P1_TURN);
     if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
-      double curr_angle = body_get_rotation(p1);
-      double new_angle = curr_angle + BOOST_ANGLE;
-      body_set_rotation(p1, new_angle);
-      vector_t boost_impulse = vec_make(BOOST_MAGNITUDE, new_angle);
+      double angle = body_get_rotation(p1);
+      vector_t boost_impulse = vec_make(body_get_mass(p1) * BOOST_VELOCITY, angle + BOOST_ANGLE);
       body_add_impulse(p1, boost_impulse);
+      body_add_rot_impulse(p1, body_get_rot_inertia(p1) * BOOST_ROT_SPEED);
       sdl_play_sound(state->boost_sound);
     }
     set_last_release(P1_TURN);
   }
 
   if (key_state[P2_TURN]) {
-    double da = PLAYER_ROT_SPEED * dt;
+    double time_since_last_press = now - get_last_press(P2_TURN);
+    double time_since_last_release = now - get_last_release(P2_TURN);
+    double time_held = dt;
+    if (time_since_last_press < time_since_last_release) {
+      time_held = fmax(time_held, time_since_last_release / CLOCKS_PER_SEC);
+    }
+    double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
+    double da = rot_speed * dt;
     double curr_angle = body_get_rotation(p2);
     body_set_rotation(p2, curr_angle + da);
     set_last_press(P2_TURN);
   } else {
-    double now = clock();
     double time_since_last_press = now - get_last_press(P2_TURN);
     double time_since_last_release = now - get_last_release(P2_TURN);
     if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
-      double curr_angle = body_get_rotation(p2);
-      double new_angle = curr_angle + BOOST_ANGLE;
-      body_set_rotation(p2, new_angle);
-      vector_t boost_impulse = vec_make(BOOST_MAGNITUDE, new_angle);
+      double angle = body_get_rotation(p1);
+      vector_t boost_impulse = vec_make(body_get_mass(p2) * BOOST_VELOCITY, angle + BOOST_ANGLE);
       body_add_impulse(p2, boost_impulse);
+      body_add_rot_impulse(p2, body_get_rot_inertia(p2) * BOOST_ROT_SPEED);
       sdl_play_sound(state->boost_sound);
     }
     set_last_release(P2_TURN);
@@ -426,11 +464,16 @@ void add_force_creators(state_t *state) {
     case SHIP:
       create_thrust(state->scene, THRUST_POWER, body);
       create_drag(state->scene, DRAG_COEF, body);
+      double rot_inertia = body_get_rot_inertia(body);
+      double rot_drag_coef = ROT_DRAG_FACTOR * rot_inertia;
+      create_rot_drag(state->scene, rot_drag_coef, body);
       for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
-        if(t == SHIP || t == WALL || t == ASTEROID){
+        if(t == SHIP || t == ASTEROID){
           create_physics_collision(state->scene, body2, body, ELASTICITY);
+        } else if (t == WALL) {
+          create_collision(state->scene, body, body2, (collision_handler_t) wall_collision_handler, NULL, ELASTICITY);
         }
       }
       break;
@@ -439,8 +482,19 @@ void add_force_creators(state_t *state) {
       for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
-        if(t == WALL || t == ASTEROID){
+        if(t == SHIP || t == ASTEROID){
           create_physics_collision(state->scene, body2, body, ELASTICITY);
+        } else if (t == WALL) {
+          create_collision(state->scene, body, body2, (collision_handler_t) wall_collision_handler, NULL, ELASTICITY);
+        }
+      }
+      break;
+    case WALL:
+      for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
+        body_t *body2 = scene_get_body(state->scene, j);
+        entity_type_t t = get_type(body2);
+        if (t == SHIP || t == ASTEROID){
+          create_collision(state->scene, body2, body, (collision_handler_t) wall_collision_handler, NULL, ELASTICITY);
         }
       }
       break;

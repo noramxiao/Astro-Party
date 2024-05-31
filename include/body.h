@@ -64,12 +64,42 @@ list_t *body_get_shape(body_t *body);
 vector_t body_get_centroid(body_t *body);
 
 /**
+ * Gets the current rotational inertia of a body.
+ * While this could be calculated with polygon_rot_inertia(), that becomes too slow
+ * when this function is called thousands of times every tick.
+ * Instead, the body should store its rotational inertia.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the body's rotational inertia
+ */
+double body_get_rot_inertia(body_t *body);
+
+/**
+ * Computes the rotational inertia of a body and sets it.
+ * See https://en.wikipedia.org/wiki/List_of_moments_of_inertia.
+ *
+ * @param body the list of vertices that make up the polygon,
+ * listed in a counterclockwise direction. There is an edge between
+ * each pair of consecutive vertices, plus one between the first and last.
+ * @return the rotational inertia of the polygon
+ */
+double body_calc_rot_inertia(body_t *body);
+
+/**
  * Gets the current velocity of a body.
  *
  * @param body a pointer to a body returned from body_init()
  * @return the body's velocity vector
  */
 vector_t body_get_velocity(body_t *body);
+
+/**
+ * Gets the current rotational speed of a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the body's velocity vector
+ */
+double body_get_rot_speed(body_t *body);
 
 /**
  * Gets the display color of a body.
@@ -136,6 +166,14 @@ void body_set_centroid(body_t *body, vector_t x);
 void body_set_velocity(body_t *body, vector_t v);
 
 /**
+ * Changes a body's rotational speed (the time-derivative of its angle).
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param s the body's new rotational speed
+ */
+void body_set_rot_speed(body_t *body, double v);
+
+/**
  * Changes a body's orientation in the plane.
  * The body is rotated about its center of mass.
  * Note that the angle is *absolute*, not relative to the current orientation.
@@ -169,6 +207,16 @@ void body_tick(body_t *body, double dt);
 void body_add_force(body_t *body, vector_t force);
 
 /**
+ * Applies a torque to a body over the current tick.
+ * If multiple torques are applied in the same tick, they should be added.
+ * Should not change the body's position or velocity; see body_tick().
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param force the force vector to apply
+ */
+void body_add_torque(body_t *body, double torque);
+
+/**
  * Applies an impulse to a body.
  * An impulse causes an instantaneous change in velocity,
  * which is useful for modeling collisions.
@@ -179,6 +227,14 @@ void body_add_force(body_t *body, vector_t force);
  * @param impulse the impulse vector to apply
  */
 void body_add_impulse(body_t *body, vector_t impulse);
+
+/**
+ * Applies a rotational impulse to a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param rot_impulse the rotational impulse scalar to apply
+ */
+void body_add_rot_impulse(body_t *body, double rot_impulse);
 
 /**
  * Clear the forces and impulses on the body.

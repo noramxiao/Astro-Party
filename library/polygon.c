@@ -33,6 +33,7 @@ void polygon_move(polygon_t *polygon, double time_elapsed) {
   polygon_translate(polygon, displacement);
   double angle = polygon->rotation_speed * time_elapsed;
   polygon_rotate(polygon, angle, polygon_centroid(polygon));
+  polygon->rotation += angle;
 }
 
 void polygon_set_velocity(polygon_t *polygon, vector_t vel) {
@@ -81,6 +82,21 @@ vector_t polygon_centroid(polygon_t *polygon) {
   ret.x = cx / (6 * area);
   ret.y = cy / (6 * area);
   return ret;
+}
+
+double polygon_rot_inertia(polygon_t *polygon, double mass) {
+  double numer = 0;
+  double denom = 0;
+  list_t *points = polygon->points;
+  size_t n = list_size(points);
+  for (size_t i = 0; i < n; i++) {
+    vector_t p1 = *(vector_t*)list_get(points, i);
+    vector_t p2 = *(vector_t*)list_get(points, (i + 1) % n);
+    numer += fabs(vec_cross(p1, p2)) * (vec_dot(p1, p1) + vec_dot(p1, p2) + vec_dot(p2, p2));
+    denom += fabs(vec_cross(p1, p2));
+  }
+  denom *= 6;
+  return mass * numer / denom;
 }
 
 void polygon_translate(polygon_t *polygon, vector_t translation) {
@@ -133,3 +149,13 @@ void polygon_set_rotation(polygon_t *polygon, double rot) {
 }
 
 double polygon_get_rotation(polygon_t *polygon) { return polygon->rotation; }
+
+double polygon_get_rot_speed(polygon_t *polygon) { 
+  assert(polygon);
+  return polygon->rotation_speed; 
+}
+
+void polygon_set_rot_speed(polygon_t *polygon, double rot_speed) { 
+  assert(polygon);
+  polygon->rotation_speed = rot_speed;
+}
