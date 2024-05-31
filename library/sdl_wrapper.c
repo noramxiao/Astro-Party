@@ -44,6 +44,7 @@ uint32_t key_start_timestamp;
  * Initially 0.
  */
 clock_t last_clock = 0;
+
 /**
  * The last time each keyidx was pressed
 */
@@ -52,6 +53,9 @@ double last_presses[] = {0, 0, 0, 0};
  * The last time each keyidx was released
 */
 double last_releases[] = {0, 0, 0, 0};
+
+const player_key_t PLAYER_KEYS[] = {P1_TURN, P1_SHOOT, P2_TURN, P2_SHOOT};
+const size_t NUM_PLAYER_KEYS = sizeof(PLAYER_KEYS) / sizeof(player_key_t);
 
 /** Computes the center of the window in pixel coordinates */
 vector_t get_window_center(void) {
@@ -91,39 +95,12 @@ vector_t get_window_position(vector_t scene_pos, vector_t window_center) {
 }
 
 size_t get_keyidx(player_key_t key) {
-  switch(key) {
-    case P1_TURN:
-      return 0;
-    case P1_SHOOT:
-      return 1;
-    case P2_TURN:
-      return 2;
-    case P2_SHOOT:
-      return 3;
-    default:
-      return -1;
+  for (size_t i = 0; i < NUM_PLAYER_KEYS; i++) {
+    if (key == PLAYER_KEYS[i]) {
+      return i;
+    }
   }
-}
-
-/**
- * Converts an SDL key code to a char.
- * 7-bit ASCII characters are just returned
- * and arrow keys are given special character codes.
- */
-char get_keycode(SDL_Keycode key) {
-  switch (key) {
-  case SDLK_w:
-    return P1_TURN;
-  case SDLK_q:
-    return P1_SHOOT;
-  case SDLK_m:
-    return P2_TURN;
-  case SDLK_n:
-    return P2_SHOOT;
-  default:
-    // Only process 7-bit ASCII characters
-    return key == (SDL_Keycode)(char)key ? key : '\0';
-  }
+  return -1;
 }
 
 void sdl_init(vector_t min, vector_t max) {
@@ -140,6 +117,17 @@ void sdl_init(vector_t min, vector_t max) {
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
   Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
   TTF_Init();
+}
+
+bool custom_poll_event(SDL_Event *event) {
+  const Uint8 *key_state = SDL_GetKeyboardState(NULL);
+  for (size_t i = 0; i < NUM_PLAYER_KEYS; i++) {
+    if (key_state[PLAYER_KEYS[i]]) {
+      event->type = SDL_KEYDOWN;
+      return true;
+    }
+  }
+  return SDL_PollEvent(event);
 }
 
 bool sdl_is_done(void *state) {
@@ -324,24 +312,30 @@ void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector
 void sdl_on_key(key_handler_t handler) { key_handler = handler; }
 void sdl_on_click(click_handler_t handler) { click_handler = handler; }
 
-double get_last_press(player_key_t key) {
-  size_t idx = get_keyidx(key);
-  return last_presses[idx];
-}
-
 void set_last_press(player_key_t key) {
   size_t idx = get_keyidx(key);
   last_presses[idx] = clock();
 }
 
-double get_last_release(player_key_t key) {
+double get_last_press(player_key_t key) {
   size_t idx = get_keyidx(key);
-  return last_releases[idx];
+  if (!last_presses[idx]) {
+    set_last_press(key);
+  }
+  return last_presses[idx];
 }
 
 void set_last_release(player_key_t key) {
   size_t idx = get_keyidx(key);
   last_releases[idx] = clock();
+}
+
+double get_last_release(player_key_t key) {
+  size_t idx = get_keyidx(key);
+  if (!last_releases[idx]) {
+    set_last_release(key);
+  }
+  return last_releases[idx];
 }
 
 void sdl_play_sound(Mix_Chunk *sound) {

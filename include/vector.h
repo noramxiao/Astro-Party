@@ -93,6 +93,15 @@ double vec_cross(vector_t v1, vector_t v2);
 vector_t vec_rotate(vector_t v, double angle);
 
 /**
+ * Returns the projection of one vector onto another
+ *
+ * @param v1 the vector to project
+ * @param v2 the vector to project onto
+ * @return a vector representing the projection
+ */
+vector_t vec_project(vector_t v1, vector_t v2);
+
+/**
  * Calculate the length of a vector.
  *
  * @param v the vector to calculate the length of
@@ -108,5 +117,13 @@ double vec_get_length(vector_t v);
  * @return a double representing the vector's magnitude
  */
 vector_t vec_make(double magnitude, double angle);
+
+/**
+ * Compute unit vector.
+ *
+ * @param v vector to be normalized
+ * @return unit vector of v
+ */
+vector_t vec_unit(vector_t v);
 
 #endif // #ifndef __VECTOR_H__

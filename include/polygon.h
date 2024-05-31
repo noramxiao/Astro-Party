@@ -65,6 +65,18 @@ double polygon_area(polygon_t *polygon);
 vector_t polygon_centroid(polygon_t *polygon);
 
 /**
+ * Computes the rotational inertia of a polygon.
+ * See https://en.wikipedia.org/wiki/Centroid#Of_a_polygon.
+ *
+ * @param polygon the list of vertices that make up the polygon,
+ * listed in a counterclockwise direction. There is an edge between
+ * each pair of consecutive vertices, plus one between the first and last.
+ * @param mass mass of polygon
+ * @return the centroid of the polygon
+ */
+double polygon_rot_inertia(polygon_t *polygon, double mass);
+
+/**
  * Translates all vertices in a polygon by a given vector.
  * Note: mutates the original polygon.
  *
@@ -131,6 +143,22 @@ void polygon_set_rotation(polygon_t *polygon, double rot);
  * @return a double value of the angle in radians
  */
 double polygon_get_rotation(polygon_t *polygon);
+
+/**
+ * Sets the rotation speed of the polygon relative to the centroid.
+ *
+ * @param polygon a polygon_t struct
+ * @param rot a double value of the angle speed in radians/s
+ */
+void polygon_set_rot_speed(polygon_t *polygon, double rot_speed);
+
+/**
+ * Returns the rotation speed of the polygon relative to the centroid.
+ *
+ * @param polygon a polygon_t struct
+ * @return a double value of the angular speed in radians/s
+ */
+double polygon_get_rot_speed(polygon_t *polygon);
 
 /**
  * Set the x and y components of a polygon's velocity vector.
