@@ -1,4 +1,5 @@
 #include "vector.h"
+#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -51,8 +52,6 @@ vector_t vec_rotate(vector_t v, double angle) {
 
 double vec_get_length(vector_t v) { return sqrt(pow(v.x, 2) + pow(v.y, 2)); }
 
-vector_t vec_unit(vector_t v) { return vec_multiply(1 / vec_get_length(v), v); }
-
 vector_t vec_project(vector_t v1, vector_t v2) {
   double dot = vec_dot(v1, v2);
   double length = vec_get_length(v2);
@@ -64,4 +63,12 @@ vector_t vec_make(double magnitude, double angle) {
   vector_t ret = (vector_t) {.x = 0, .y = magnitude};
   ret = vec_rotate(ret, angle);
   return ret;
+}
+
+vector_t vec_unit(vector_t v) {
+  double magnitude = sqrt(v.x * v.x + v.y * v.y);
+  if (magnitude == 0.) {
+    return VEC_ZERO;
+  }
+  return vec_multiply(1.0 / magnitude, v);
 }

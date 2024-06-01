@@ -68,7 +68,10 @@ void create_spring(scene_t *scene, double k, body_t *body1, body_t *body2);
  * @param body the body to slow down
  */
 void create_drag(scene_t *scene, double gamma, body_t *body);
+
 void create_thrust(scene_t *scene, double power, body_t *body);
+
+void create_rot_drag(scene_t *scene, double gamma, body_t *body);
 
 /**
  * Adds a force creator to a scene that calls a given collision handler
@@ -100,6 +103,18 @@ void create_collision(scene_t *scene, body_t *body1, body_t *body2,
  * @param body2 the second body
  */
 void create_destructive_collision(scene_t *scene, body_t *body1, body_t *body2);
+
+/**
+ * Adds a force creator to a scene that destroys the first body when they collide.
+ * The body should be destroyed by calling body_remove().
+ * This should be represented as an on-collision callback
+ * registered with create_collision().
+ *
+ * @param scene the scene containing the bodies
+ * @param body1 the first body
+ * @param body2 the second body
+ */
+void create_destroy_first_collision(scene_t *scene, body_t *body1, body_t *body2);
 
 /**
  * The collision handler for for physics collisions. Applies impulses to
