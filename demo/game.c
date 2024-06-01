@@ -22,7 +22,7 @@ const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
 const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
-const size_t SCORE_HEIGHT = 75; // height of entire score bar
+const size_t SCORE_HEIGHT = 30; // height of entire score bar
 
 const double INIT_SHIP_SPEED = 0;
 const double INIT_SHIP_ANGLES[] = {
@@ -433,30 +433,6 @@ void home_init(state_t *state) {
   list_add(state->home_assets, title);
 }
 
-bool update_score(state_t *state) {
-//   bool p1 = false;
-//   bool p2 = false;
-//   size_t n_bodies = scene_bodies(state->scene);
-
-//   entity_type_t t1 = get_type(state->player1);
-//   entity_type_t t2 = get_type(state->player2);
-
-//   p1 = t1 == SHIP || t1 == PILOT;
-//   p2 = t2 == SHIP || t2 == PILOT;
-
-//   if (!(p1 && p2)) {
-//     if (p1) {
-//       state->P1_score++;
-//       return true;
-//     } else if (p2) {
-//       state->P2_score++;
-//       return true;
-//     }
-//   }
-  return false;
-
-}
-
 void add_force_creators(state_t *state) {
   for (size_t i = 0; i < scene_bodies(state->scene); i++) {
     body_t *body = scene_get_body(state->scene, i);
@@ -522,7 +498,7 @@ void render_scores(state_t *state) {
   rgb_color_t p1_color = PLAYER_COLORS[0];
   size_t width = p1 * (MAX.x / WIN_SCORE);
   size_t height = SCORE_HEIGHT / 2;
-  vector_t centroid = (vector_t){.x = width / 2.0, .y = SCORE_HEIGHT / 4.0};
+  vector_t centroid = (vector_t){.x = width / 2.0, .y = MAX.y - SCORE_HEIGHT / 4.0};
   list_t *rectangle_pts = make_rectangle(centroid, width, height);
   polygon_t *rectangle = polygon_init(rectangle_pts, VEC_ZERO, 0.0, p1_color.r, 
                                       p1_color.g, p1_color.b);
@@ -533,7 +509,7 @@ void render_scores(state_t *state) {
   rgb_color_t p2_color = PLAYER_COLORS[1];
   size_t width_2 = p2 * (MAX.x / WIN_SCORE);
   size_t height_2 = SCORE_HEIGHT / 2;
-  vector_t centroid_2 = (vector_t){.x = width_2 / 2.0, .y = 0.75 * SCORE_HEIGHT};
+  vector_t centroid_2 = (vector_t){.x = width_2 / 2.0, .y = MAX.y - 0.75 * SCORE_HEIGHT};
   list_t *rectangle_pts_2 = make_rectangle(centroid_2, width_2, height_2);
   polygon_t *rectangle_2 = polygon_init(rectangle_pts_2, VEC_ZERO, 0.0, p2_color.r, 
                                       p2_color.g, p2_color.b);
