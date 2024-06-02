@@ -574,9 +574,10 @@ bool emscripten_main(state_t *state) {
 
       sdl_clear();
       render_assets(state->game_assets);
+
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
       sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
-      //sdl_render_scene(state->scene, NULL);
+      
       render_scores(state);
       sdl_show();
 
