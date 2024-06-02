@@ -168,28 +168,6 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
   reset_game(state);
 }
 
-/**
- * Collision handler that prevents object from phasing through wall
-*/
-void wall_collision_handler(body_t *body, body_t *wall, vector_t axis, void *aux, double force_const) {
-  entity_info_t *info = body_get_info(body);
-  switch (info->type) {
-    case ASTEROID:
-    case SHIP:
-      physics_collision_handler(body, wall, axis, aux, 0.2 * ELASTICITY); // ship doesn't bounce against wall
-      collision_info_t coll_info = find_collision(body, wall);
-      double overlap = coll_info.overlap;
-      vector_t body_dir = vec_unit(body_get_velocity(body));
-      vector_t remove_overlap = vec_multiply(-overlap, body_dir);
-      vector_t new_centroid = vec_add(body_get_centroid(body), remove_overlap);
-      body_set_centroid(body, new_centroid);
-      body_set_velocity(body, VEC_ZERO);
-      break;
-    default:
-      break;
-    }
-} 
-
 void add_bullet(state_t *state, body_t *ship) {
   vector_t ship_centroid = body_get_centroid(ship);
   double ship_angle = body_get_rotation(ship);
@@ -446,10 +424,8 @@ void add_force_creators(state_t *state) {
       for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
-        if(t == SHIP || t == ASTEROID){
+        if(t == SHIP || t == ASTEROID || t == WALL){
           create_physics_collision(state->scene, body2, body, ELASTICITY);
-        } else if (t == WALL) {
-          create_collision(state->scene, body, body2, (collision_handler_t) wall_collision_handler, NULL, ELASTICITY);
         }
       }
       break;
@@ -458,19 +434,8 @@ void add_force_creators(state_t *state) {
       for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
-        if(t == SHIP || t == ASTEROID){
+        if(t == SHIP || t == ASTEROID || t == WALL){
           create_physics_collision(state->scene, body2, body, ELASTICITY);
-        } else if (t == WALL) {
-          create_collision(state->scene, body, body2, (collision_handler_t) wall_collision_handler, NULL, ELASTICITY);
-        }
-      }
-      break;
-    case WALL:
-      for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
-        body_t *body2 = scene_get_body(state->scene, j);
-        entity_type_t t = get_type(body2);
-        if (t == SHIP || t == ASTEROID){
-          create_collision(state->scene, body2, body, (collision_handler_t) wall_collision_handler, NULL, ELASTICITY);
         }
       }
       break;
@@ -486,8 +451,6 @@ void render_assets(list_t *assets) {
     asset_render(list_get(assets, i));
   }
 }
-
-
 
 /** 
  * Renders score as a progress bar at the top of the screen.
