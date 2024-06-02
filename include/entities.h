@@ -6,11 +6,7 @@
 #include "body.h"
 #include "color.h"
 
-// Color constants
-// extern const rgb_color_t RED; 
-// extern const rgb_color_t BLUE; 
 extern const rgb_color_t PLAYER_COLORS[];
-// extern const rgb_color_t GRAY;
 
 typedef enum {
 	SHIP,

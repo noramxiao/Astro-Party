@@ -22,7 +22,7 @@
 **Controls:**
 - **Keyboard:**
   - Players use two keys each (one for shooting, one for turning)
-  - Default keybinds: player 1 uses "W" and "Q" to turn and shoot, and player 2 uses "<" and ">" to turn and shoot.
+  - Default keybinds: player 1 uses "W" and "Q" to turn and shoot, and player 2 uses "M" and "N" to turn and shoot.
 - **Mouse:** 
   - Players can use the mouse to interact with the UI to select the map/start the game.
 
