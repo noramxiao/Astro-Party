@@ -214,6 +214,24 @@ double get_last_release(player_key_t key);
 void set_last_release(player_key_t key);
 
 /**
+ * Get duration of time key has been held for
+ * 
+ * @param key key to find time since last press
+ * 
+ * @return time in seconds that key has been held
+*/
+double get_time_held(player_key_t key);
+
+/**
+ * Load a .wav sound file
+ * 
+ * @param sound_path path to wav file
+ * 
+ * @return pointer to Mix_Chunk
+*/
+Mix_Chunk *sdl_load_sound(const char* sound_path);
+
+/**
  * Play a sound
  * 
  * @param sound sound to play

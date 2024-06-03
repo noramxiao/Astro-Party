@@ -268,7 +268,7 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
   reset_game(state);
 }
 
-void shoot_bullet(state_t *state, body_t *ship) {
+void handle_shoot(state_t *state, body_t *ship) {
   // check if player has shot before reload time is up
   double now = clock();
   double time_since_shot;
@@ -278,13 +278,11 @@ void shoot_bullet(state_t *state, body_t *ship) {
     time_since_shot = now - state->time_of_last_shot[1];
   }
   time_since_shot = time_since_shot / CLOCKS_PER_SEC;
-  printf("%f\n", time_since_shot);
   if (time_since_shot < RELOAD_TIME) {
     return;
   }
 
   sdl_play_sound(state->shoot_sound);
-  set_last_press(P1_SHOOT);
   
   vector_t ship_centroid = body_get_centroid(ship);
   double ship_angle = body_get_rotation(ship);
@@ -396,6 +394,25 @@ void init_map(state_t *state){
   }
 }
 
+void handle_turn(body_t *ship, double time_held, double dt) {
+  double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
+  double da = rot_speed * dt;
+  double curr_angle = body_get_rotation(ship);
+  body_set_rotation(ship, curr_angle + da);
+}
+
+void handle_boost(body_t *ship, double time_since_turn_pressed, 
+                  double time_since_turn_released, Mix_Chunk *boost_sound) {
+  if (time_since_turn_pressed < time_since_turn_released && 
+      time_since_turn_released < DOUBLE_TAP_THRESH) {
+    double angle = body_get_rotation(ship);
+    vector_t boost_impulse = vec_make(body_get_mass(ship) * BOOST_VELOCITY, angle + BOOST_ANGLE);
+    body_add_impulse(ship, boost_impulse);
+    body_add_rot_impulse(ship, body_get_rot_inertia(ship) * BOOST_ROT_SPEED);
+    sdl_play_sound(boost_sound);
+  }
+}
+
 void on_key(Uint8 *key_state, state_t *state) {
   if (state->mode != GAME) { return; }
 
@@ -406,61 +423,35 @@ void on_key(Uint8 *key_state, state_t *state) {
   double now = clock(); 
 
   if (key_state[P1_TURN]) {
-    double time_since_last_press = now - get_last_press(P1_TURN);
-    double time_since_last_release = now - get_last_release(P1_TURN);
-    double time_held = dt;
-    if (time_since_last_press < time_since_last_release) {
-      time_held = fmax(time_held, time_since_last_release / CLOCKS_PER_SEC);
-    }
-    double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
-    double da = rot_speed * dt;
-    double curr_angle = body_get_rotation(p1);
-    body_set_rotation(p1, curr_angle + da);
+    double time_held = fmax(dt, get_time_held(P1_TURN));
+    handle_turn(p1, time_held, dt);
     set_last_press(P1_TURN);
   } else {
     double time_since_last_press = now - get_last_press(P1_TURN);
     double time_since_last_release = now - get_last_release(P1_TURN);
-    if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
-      double angle = body_get_rotation(p1);
-      vector_t boost_impulse = vec_make(body_get_mass(p1) * BOOST_VELOCITY, angle + BOOST_ANGLE);
-      body_add_impulse(p1, boost_impulse);
-      body_add_rot_impulse(p1, body_get_rot_inertia(p1) * BOOST_ROT_SPEED);
-      sdl_play_sound(state->boost_sound);
-    }
+    handle_boost(p1, time_since_last_press, time_since_last_release, state->boost_sound);
     set_last_release(P1_TURN);
   }
 
   if (key_state[P2_TURN]) {
-    double time_since_last_press = now - get_last_press(P2_TURN);
-    double time_since_last_release = now - get_last_release(P2_TURN);
-    double time_held = dt;
-    if (time_since_last_press < time_since_last_release) {
-      time_held = fmax(time_held, time_since_last_release / CLOCKS_PER_SEC);
-    }
-    double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
-    double da = rot_speed * dt;
-    double curr_angle = body_get_rotation(p2);
-    body_set_rotation(p2, curr_angle + da);
+    double time_held = fmax(dt, get_time_held(P2_TURN));
+    handle_turn(p2, time_held, dt);
     set_last_press(P2_TURN);
   } else {
     double time_since_last_press = now - get_last_press(P2_TURN);
     double time_since_last_release = now - get_last_release(P2_TURN);
-    if (time_since_last_press < time_since_last_release && time_since_last_release < DOUBLE_TAP_THRESH) {
-      double angle = body_get_rotation(p1);
-      vector_t boost_impulse = vec_make(body_get_mass(p2) * BOOST_VELOCITY, angle + BOOST_ANGLE);
-      body_add_impulse(p2, boost_impulse);
-      body_add_rot_impulse(p2, body_get_rot_inertia(p2) * BOOST_ROT_SPEED);
-      sdl_play_sound(state->boost_sound);
-    }
+    handle_boost(p2, time_since_last_press, time_since_last_release, state->boost_sound);
     set_last_release(P2_TURN);
   }
 
   if (key_state[P1_SHOOT]) {
-    shoot_bullet(state, p1);
+    handle_shoot(state, p1);
+    set_last_press(P1_SHOOT);
   }
 
   if (key_state[P2_SHOOT]) {
-    shoot_bullet(state, p2);
+    handle_shoot(state, p2);
+    set_last_press(P2_SHOOT);
   }
 }
 
@@ -715,8 +706,8 @@ state_t *emscripten_init() {
   
   home_init(state);
 
-  state->shoot_sound = Mix_LoadWAV(SHOOT_SOUND_PATH);
-  state->boost_sound = Mix_LoadWAV(BOOST_SOUND_PATH);
+  state->shoot_sound = sdl_load_sound(SHOOT_SOUND_PATH);
+  state->boost_sound = sdl_load_sound(BOOST_SOUND_PATH);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);

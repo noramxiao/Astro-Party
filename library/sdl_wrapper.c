@@ -338,6 +338,20 @@ double get_last_release(player_key_t key) {
   return last_releases[idx];
 }
 
+double get_time_held(player_key_t key) {
+  double now = clock();
+  double time_since_last_press = now - get_last_press(key);
+  double time_since_last_release = now - get_last_release(key);
+  if (time_since_last_press < time_since_last_release) {
+    return time_since_last_release / CLOCKS_PER_SEC;
+  }
+  return 0;
+}
+
+Mix_Chunk *sdl_load_sound(const char* sound_path) {
+  return Mix_LoadWAV(sound_path);
+}
+
 void sdl_play_sound(Mix_Chunk *sound) {
   Mix_PlayChannel(-1, sound, 0);
 }
