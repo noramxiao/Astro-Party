@@ -15,6 +15,7 @@ Player 2:
 
 HOW TO WIN
 
+- Shoot at asteroids to destroy them.
 
 GAMEPLAY TIPS
 1. **Stay on the Move:** Constantly moving makes it harder for opponents to hit you.
