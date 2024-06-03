@@ -136,6 +136,7 @@ typedef struct image_info {
 void toggle_play(state_t *state);
 void toggle_left_arrow(state_t *state);
 void toggle_right_arrow(state_t *state);
+void add_force_creators(state_t *state);
 
 image_info_t home_images[] = {
   { .image_path = "assets/title.png",
@@ -161,6 +162,54 @@ map_t maps[] = {
     (vector_t){100, 100}},
     .start_pos = (vector_t[]){(vector_t){100, 300}, 
     (vector_t){400, 200}}
+  },
+  {
+    .num_blocks = 4,
+    .num_asteroids = 7,
+    .block_locations = (vector_t[]){(vector_t){100, 100},
+    (vector_t){250, 250},
+    (vector_t){400, 100},
+    (vector_t){100, 400}},
+    .block_sizes = (vector_t[]){(vector_t){100, 100},
+    (vector_t){75, 75},
+    (vector_t){100, 100},
+    (vector_t){75, 75}},
+    .start_pos = (vector_t[]){(vector_t){600, 400},
+    (vector_t){300, 100}}
+  },
+  {
+    .num_blocks = 5,
+    .num_asteroids = 12,
+    .block_locations = (vector_t[]){(vector_t){150, 150},
+    (vector_t){300, 300},
+    (vector_t){450, 150},
+    (vector_t){600, 300},
+    (vector_t){750, 150}},
+    .block_sizes = (vector_t[]){(vector_t){120, 120},
+    (vector_t){80, 80},
+    (vector_t){100, 100},
+    (vector_t){80, 80},
+    (vector_t){120, 120}},
+    .start_pos = (vector_t[]){(vector_t){50, 450},
+    (vector_t){950, 50}}
+  },
+  {
+    .num_blocks = 6,
+    .num_asteroids = 15,
+    .block_locations = (vector_t[]){(vector_t){600, 300},
+    (vector_t){200, 400},
+    (vector_t){350, 150},
+    (vector_t){500, 350},
+    (vector_t){650, 100},
+    (vector_t){800, 300}},
+    .block_sizes = (vector_t[]){(vector_t){90, 90},
+    (vector_t){110, 110},
+    (vector_t){95, 95},
+    (vector_t){110, 110},
+    (vector_t){90, 90},
+    (vector_t){95, 95}},
+    .start_pos = (vector_t[]){(vector_t){400, 50},
+    (vector_t){900, 450}}
   }
 };
 
@@ -329,7 +378,8 @@ void add_asteroids(state_t *state){
 }
 
 void init_map(state_t *state){
-  map_t map = state->map;
+  map_t map = maps[state->map_selected];
+  state->map = map;
 
   add_ship(state, map.start_pos[0], 0);
   add_ship(state, map.start_pos[1], 1);
@@ -337,11 +387,13 @@ void init_map(state_t *state){
   add_obstacles(state);
   add_asteroids(state);
 
-  SDL_Rect background_bbox = (SDL_Rect){
+  if (map.bg_path != NULL) {
+    SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
-  asset_t *background_asset =
+    asset_t *background_asset =
       asset_make_image(map.bg_path, background_bbox);
-  list_add(state->game_assets, background_asset);
+    list_add(state->game_assets, background_asset);
+  }
 }
 
 void on_key(Uint8 *key_state, state_t *state) {
@@ -414,6 +466,11 @@ void on_key(Uint8 *key_state, state_t *state) {
 
 void toggle_play(state_t *state) {
   state->mode = GAME;
+  init_map(state);
+  state->player1 = scene_get_body(state->scene, 0);
+  state->player2 = scene_get_body(state->scene, 1);
+
+  add_force_creators(state);
 }
 
 void toggle_left_arrow(state_t *state) {
@@ -654,20 +711,15 @@ state_t *emscripten_init() {
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->post_game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
-  state->map = maps[0];
   state->scene = scene_init();
   
   home_init(state);
-  init_map(state);
-  state->player1 = scene_get_body(state->scene, 0);
-  state->player2 = scene_get_body(state->scene, 1);
 
   state->shoot_sound = Mix_LoadWAV(SHOOT_SOUND_PATH);
   state->boost_sound = Mix_LoadWAV(BOOST_SOUND_PATH);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
-  add_force_creators(state);
   
   return state;
 }
