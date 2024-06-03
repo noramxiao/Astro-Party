@@ -42,7 +42,7 @@ const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
 const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
 const char *BOOST_SOUND_PATH = "assets/sounds/boost.wav";
 
-const double INIT_BULLET_SPEED = 500;
+const double BULLET_SPEED = 500;
 
 const double WALL_DIM = 1;
 
@@ -202,7 +202,7 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
 void add_bullet(state_t *state, body_t *ship) {
   vector_t ship_centroid = body_get_centroid(ship);
   double ship_angle = body_get_rotation(ship);
-  body_t *bullet = make_bullet(ship_centroid, ship_angle, INIT_BULLET_SPEED);
+  body_t *bullet = make_bullet(ship_centroid, ship_angle, BULLET_SPEED);
   scene_t *scene = state->scene;
   scene_add_body(scene, bullet);
   for (int i = 0; i < scene_bodies(scene); i++) {
