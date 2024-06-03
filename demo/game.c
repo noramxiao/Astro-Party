@@ -647,12 +647,9 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
-<<<<<<< HEAD
   state->time_of_last_shot[0] = 0;
   state->time_of_last_shot[1] = 0;
-=======
   state->map_selected = 0;
->>>>>>> 91f146fbc83ff0b9b10b507b342f1eadff62a2c8
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->post_game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
