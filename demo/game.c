@@ -13,6 +13,7 @@
 #include "sdl_wrapper.h"
 #include "shapes.h"
 #include "entities.h"
+#include "bot.h"
 
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
