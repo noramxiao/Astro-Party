@@ -30,44 +30,75 @@ size_t get_team(body_t* body);
 entity_info_t *entity_info_init(entity_type_t type, size_t player_idx);
 
 /** 
- * Creates a body for a spaceship. Will just be an isosceles triangle for now.
+ * Creates a isosceles triangle shaped body for a spaceship.
  * 
  * @param centroid centroid of the spaceship
  * @param player_idx which player the ship belongs to
- * @param init_velocity initial velocity of the spaceship
+ * @param velocity initial velocity of the spaceship
+ * @param angle initial angle of the spaceship
+ * @param base base length of the spaceship
+ * @param height height of the spaceship
+ * @param mass mass of the spaceship
+ * 
  * @return a pointer to the ship body
 */
-body_t *make_ship(vector_t centroid, size_t player_idx, vector_t velocity, double angle);
+body_t *make_ship(vector_t centroid, size_t player_idx, vector_t velocity, 
+									double angle, const double base, const double height, 
+									const double mass);
 
 /** 
- * Creates a body for a pilot. Will just be a rectangle for now.
+ * Creates a rectangle shaped body for a pilot.
  * 
  * @param centroid centroid of the pilot
  * @param player_idx which player the pilot belongs to
- * @param init_velocity initial velocity of the pilot
+ * @param velocity initial velocity of the pilot
+ * @param angle initial angle of pilot
+ * @param mass mass of pilot
+ * @param dims rectangle dimensions for pilot body
+ * 
  * @return a pointer to the pilot body
 */
-body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, double angle);
+body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, 
+									 double angle, double mass, vector_t dims);
 
 /** 
  * Creates a body of a circle shape for a bullet.
  * 
- * @param centroid centroid of the bullet
- * @param velocity velocity of the bullet
+ * @param ship_centroid centroid of the ship
+ * @param ship_angle angle of the ship
+ * @param speed initial speed of bullet
+ * @param radius radius of bullet
+ * @param mass mass of bullet
+ * @param ship_height height of ship
+ * 
  * @return a pointer to the bullet body
 */
-body_t *make_bullet(vector_t ship_centroid, double ship_angle, double init_speed);
+body_t *make_bullet(vector_t ship_centroid, double ship_angle, double speed, 
+										const double radius, const double mass, 
+										const double ship_height);
 
 /** 
- * Creates a body for an asteroid. Will just be a grey circle for now.
+ * Creates a circular body for an asteroid.
  * 
  * @param centroid centroid of the asteroid
  * @param radius radius of asteroid
- * @param init_velocity initial velocity of asteroid
+ * @param velocity initial velocity of asteroid
+ * @param density density of asteroid
+ * 
  * @return a pointer to the asteroid body
 */
-body_t *make_asteroid(vector_t centroid, double radius, vector_t init_velocity);
+body_t *make_asteroid(vector_t centroid, double radius, vector_t velocity, 
+											const double density);
 
-body_t *make_blackhole(vector_t centroid, double mass);
+/** 
+ * Creates a body for black hole asteroid.
+ * 
+ * @param centroid centroid of the asteroid
+ * @param mass mass of black hole
+ * @param radius radius of black hole
+ * 
+ * @return a pointer to the asteroid body
+*/
+body_t *make_blackhole(vector_t centroid, double mass, const double radius);
 
 #endif

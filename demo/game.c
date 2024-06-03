@@ -28,16 +28,16 @@ const rgb_color_t BLACK = (rgb_color_t){.r = 1, .g = 1, .b = 1};
 
 const double INIT_SHIP_SPEED = 0;
 const double INIT_SHIP_ANGLES[] = {
-  M_PI / 4, 
-  5 * M_PI / 4, 
-  7 * M_PI / 4,
-  3 * M_PI / 4
+  5 * M_PI / 4,
+  M_PI / 4
 };
 const double PLAYER_ROT_SPEED = -4 * M_PI;
 const double BOOST_VELOCITY = 400;
 const double BOOST_ANGLE = -M_PI / 2;
 const double BOOST_ROT_SPEED = -3 * M_PI;
 const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
+
+const double RELOAD_TIME = 0.5;
 
 // sound constants
 const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
@@ -53,6 +53,25 @@ const double DRAG_COEF = 30;
 const double ROT_DRAG_FACTOR = 7;
 
 const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
+
+// ship constants
+const double SHIP_MASS = 10;
+const double SHIP_BASE = 20;
+const double SHIP_HEIGHT = 30;
+
+// pilot constants
+const double PILOT_MASS = 5;
+const vector_t PILOT_RECT_DIMS = (vector_t) {.x = 10, .y = 20};
+const double PILOT_CIRC_RAD = 15;
+
+const double BLACKHOLE_CIRC_RAD = 10;
+
+// asteroid constants
+const double ASTEROID_MASS_DENSITY = 0.1;
+
+// bullet constants
+const double BULLET_RADIUS = 5;
+const double BULLET_MASS = 5;
 
 enum mode {
   HOME,
@@ -86,6 +105,7 @@ struct state {
 
   body_t *player1;
   body_t *player2;
+  clock_t time_of_last_shot[2];
   
   Mix_Chunk *shoot_sound;
   Mix_Chunk *boost_sound;
@@ -160,13 +180,12 @@ button_info_t button_templates[] = {
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
   vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
-  body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team]);
+  body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team], 
+                                SHIP_BASE, SHIP_HEIGHT, SHIP_MASS);
   scene_add_body(state->scene, ship_body);
 }
 
 void reset_game(state_t *state) {
-  // clear and re-add bricks. Which function initializes bricks in the
-  // beginning of the game?
   size_t n_bodies = scene_bodies(state->scene);
 
   for (size_t i = 0; i < n_bodies; i++) {
@@ -200,10 +219,28 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
   reset_game(state);
 }
 
-void add_bullet(state_t *state, body_t *ship) {
+void shoot_bullet(state_t *state, body_t *ship) {
+  // check if player has shot before reload time is up
+  double now = clock();
+  double time_since_shot;
+  if (ship == state->player1) {
+    time_since_shot = now - state->time_of_last_shot[0];
+  } else {
+    time_since_shot = now - state->time_of_last_shot[1];
+  }
+  time_since_shot = time_since_shot / CLOCKS_PER_SEC;
+  printf("%f\n", time_since_shot);
+  if (time_since_shot < RELOAD_TIME) {
+    return;
+  }
+
+  sdl_play_sound(state->shoot_sound);
+  set_last_press(P1_SHOOT);
+  
   vector_t ship_centroid = body_get_centroid(ship);
   double ship_angle = body_get_rotation(ship);
-  body_t *bullet = make_bullet(ship_centroid, ship_angle, BULLET_SPEED);
+  body_t *bullet = make_bullet(ship_centroid, ship_angle, BULLET_SPEED, BULLET_RADIUS,
+                               BULLET_MASS, SHIP_HEIGHT);
   scene_t *scene = state->scene;
   scene_add_body(scene, bullet);
   for (int i = 0; i < scene_bodies(scene); i++) {
@@ -218,6 +255,13 @@ void add_bullet(state_t *state, body_t *ship) {
     } else if (get_type(body) == SHIP) {
       create_collision(scene, body, bullet, (collision_handler_t) score_hit, state, ELASTICITY);
     }
+  }
+
+  // update time of last shot by player
+  if (ship == state->player1) {
+    state->time_of_last_shot[0] = now;
+  } else {
+    state->time_of_last_shot[1] = now;
   }
 }
 
@@ -264,7 +308,8 @@ void add_asteroids(state_t *state){
   for(size_t i = 0; i < state->map.num_asteroids; i++){
     bool pos_found = false;
     vector_t pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
-    body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, (vector_t){0, 0});
+    body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, VEC_ZERO, 
+                                     ASTEROID_MASS_DENSITY);
     while(!pos_found){
       pos_found = true;
       pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
@@ -359,15 +404,11 @@ void on_key(Uint8 *key_state, state_t *state) {
   }
 
   if (key_state[P1_SHOOT]) {
-    add_bullet(state, p1);
-    sdl_play_sound(state->shoot_sound);
-    set_last_press(P1_SHOOT);
+    shoot_bullet(state, p1);
   }
 
   if (key_state[P2_SHOOT]) {
-    add_bullet(state, p2);
-    sdl_play_sound(state->shoot_sound);
-    set_last_press(P2_SHOOT);
+    shoot_bullet(state, p2);
   }
 }
 
@@ -607,6 +648,8 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
+  state->time_of_last_shot[0] = 0;
+  state->time_of_last_shot[1] = 0;
   state->map_selected = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
