@@ -20,8 +20,6 @@ const vector_t MAX = {1000, 500};
 const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
-const char *TITLE_PATH = "assets/title.png";
-const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
 const size_t SCORE_HEIGHT = 30; // height of entire score bar
 const char *FONT_PATH = "assets/Cascadia.ttf";
 const char *GAME_OVER_MSG = "Game over! Winner is: Player ";
@@ -97,6 +95,7 @@ struct state {
   size_t P1_score;
   size_t P2_score;
 
+  size_t map_selected;
   map_t map;
   
   list_t *home_assets;
@@ -124,7 +123,29 @@ typedef struct button_info {
   button_handler_t handler;
 } button_info_t;
 
+typedef struct image_info {
+  const char *image_path;
+  const char *font_path;
+  SDL_Rect image_box;
+  SDL_Rect text_box;
+  rgb_color_t text_color;
+  const char *text;
+} image_info_t;
+
 void toggle_play(state_t *state);
+void toggle_left_arrow(state_t *state);
+void toggle_right_arrow(state_t *state);
+
+image_info_t home_images[] = {
+  { .image_path = "assets/title.png",
+    .image_box = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3}},
+  { .image_path = "assets/box.jpeg",
+    .image_box = (SDL_Rect){400, 300, 200, 50},
+    .font_path = "assets/Cascadia.ttf",
+    .text_box = (SDL_Rect){415, 315, 200, 75},
+    .text_color = BLACK,
+    .text = "Map "}
+};
 
 map_t maps[] = {
   {
@@ -146,8 +167,14 @@ double rand_double() { return (double)rand() / RAND_MAX; }
 
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
-     .image_box = (SDL_Rect){400, 300, 200, 75},
+     .image_box = (SDL_Rect){395, 370, 200, 75},
      .handler = (void *)toggle_play},
+    {.image_path = "assets/left_arrow.png",
+     .image_box = (SDL_Rect){320, 295, 75, 75},
+     .handler = (void*)toggle_left_arrow},
+    {.image_path = "assets/right_arrow.png",
+     .image_box = (SDL_Rect){600, 295, 75, 75},
+     .handler = (void*)toggle_right_arrow},
 };
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
@@ -388,6 +415,19 @@ void toggle_play(state_t *state) {
   state->mode = GAME;
 }
 
+void toggle_left_arrow(state_t *state) {
+  if (state->map_selected == 0) {
+    state->map_selected = 3;
+    return;
+  }
+  state->map_selected--;
+}
+
+void toggle_right_arrow(state_t *state) {
+  state->map_selected++;
+  state->map_selected %= 4;
+}
+
 void handle_buttons(state_t *state, double x, double y) {
   size_t n_assets = list_size(state->home_assets);
   for (size_t i = 0; i < n_assets; i++) {
@@ -437,6 +477,25 @@ asset_t *create_button_from_info(state_t *state, button_info_t info) {
 }
 
 /**
+ * Using `info`, initializes an image in the home scene and adds to asset list.
+ *
+ * @param info the image info struct used to initialize the button
+ */
+void add_image_from_info(state_t *state, image_info_t info) {
+  asset_t *image_asset = NULL;
+  asset_t *text_asset = NULL;
+  if (info.image_path != NULL) {
+    image_asset = asset_make_image(info.image_path, info.image_box);
+    list_add(state->home_assets, image_asset);
+  }
+  if (info.font_path != NULL) {
+    text_asset = asset_make_text(info.font_path, info.text_box, info.text,
+                                 info.text_color);
+    list_add(state->home_assets, text_asset);
+  }
+}
+
+/**
  * Initializes and stores the button assets in the state.
  */
 void create_buttons(state_t *state) {
@@ -446,14 +505,17 @@ void create_buttons(state_t *state) {
     asset_t *button = create_button_from_info(state, info);
     list_add(state->home_assets, button);
   }
-
 }
 
 void home_init(state_t *state) {
   create_buttons(state);
-
-  asset_t *title = asset_make_image(TITLE_PATH, TITLE_BOX);
-  list_add(state->home_assets, title);
+  
+  // image initialization and adding
+  size_t n_images = sizeof(home_images) / sizeof(home_images[0]);
+  for (size_t i = 0; i < n_images; i++) {
+    image_info_t info = home_images[i];
+    add_image_from_info(state, info);
+  }
 }
 
 void add_force_creators(state_t *state) {
@@ -524,6 +586,31 @@ void render_scores(state_t *state) {
   sdl_draw_polygon(rectangle_2, p2_color);
 }
 
+/**
+ * Displays which map the user has selected, home page only
+*/
+void render_map_selected(state_t *state) {
+  SDL_Rect box = (SDL_Rect){455, 315, 10, 10};
+  char *selected = " ";
+
+  switch (state->map_selected) {
+    case 0:
+      selected = "1";
+      break;
+    case 1:
+      selected = "2";
+      break;
+    case 2:
+      selected = "3";
+      break;
+    default:
+      selected = "4";
+      break;
+  }
+  asset_t *text = asset_make_text(FONT_PATH, box, selected, WHITE);
+  asset_render(text);
+}
+
 void post_game_init(state_t *state) {
   char *msg = strdup(GAME_OVER_MSG);
   ssize_t winner = state->P1_score - state->P2_score; 
@@ -560,8 +647,12 @@ state_t *emscripten_init() {
   state->mode = HOME;
   state->P1_score = 0;
   state->P2_score = 0;
+<<<<<<< HEAD
   state->time_of_last_shot[0] = 0;
   state->time_of_last_shot[1] = 0;
+=======
+  state->map_selected = 0;
+>>>>>>> 91f146fbc83ff0b9b10b507b342f1eadff62a2c8
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->post_game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
@@ -590,6 +681,7 @@ bool emscripten_main(state_t *state) {
     case HOME: {
       sdl_clear();
       render_assets(state->home_assets);
+      render_map_selected(state);
       sdl_show();
       break;
     }
