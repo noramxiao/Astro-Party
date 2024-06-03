@@ -23,6 +23,9 @@ const size_t N_PLAYERS = 2;
 const char *TITLE_PATH = "assets/title.png";
 const SDL_Rect TITLE_BOX = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3};
 const size_t SCORE_HEIGHT = 30; // height of entire score bar
+const char *FONT_PATH = "assets/Cascadia.ttf";
+const char *GAME_OVER_MSG = "Game over! Winner is: Player ";
+const rgb_color_t BLACK = (rgb_color_t){.r = 1, .g = 1, .b = 1};
 
 const double INIT_SHIP_SPEED = 0;
 const double INIT_SHIP_ANGLES[] = {
@@ -79,6 +82,7 @@ struct state {
   
   list_t *home_assets;
   list_t *game_assets;
+  list_t *post_game_assets;
 
   body_t *player1;
   body_t *player2;
@@ -158,11 +162,11 @@ void reset_game(state_t *state) {
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
                 double force_const) {
   state_t *state = aux;
-  entity_info_t *bullet_info = body_get_info(body2);
-  if(bullet_info->team == 0){
+  entity_info_t *ship_info = body_get_info(body1);
+  if(ship_info->team == 1){
     state->P1_score++;
   }
-  if(bullet_info->team == 1){
+  if(ship_info->team == 0){
     state->P2_score++;
   }
   reset_game(state);
@@ -479,6 +483,21 @@ void render_scores(state_t *state) {
   sdl_draw_polygon(rectangle_2, p2_color);
 }
 
+void post_game_init(state_t *state) {
+  char *msg = strdup(GAME_OVER_MSG);
+  ssize_t winner = state->P1_score - state->P2_score; 
+  if (winner > 0) {
+    msg = strcat(msg, "Red");
+  } else {
+    msg = strcat(msg, "Blue");
+  }
+
+  SDL_Rect box = (SDL_Rect){MAX.x / 4, 0.25 * MAX.y, MAX.x / 4, MAX.y / 4};
+  asset_t *msg_asset = asset_make_text(FONT_PATH, box, msg, BLACK);
+
+  list_add(state->post_game_assets, msg_asset);
+}
+
 vector_t calc_cam_size(state_t *state){
   vector_t diff = vec_subtract(body_get_centroid(state->player1), body_get_centroid(state->player2));
   diff.x = fmax(fabs(diff.x) * 1.3, 100);
@@ -502,6 +521,7 @@ state_t *emscripten_init() {
   state->P2_score = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
+  state->post_game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->map = maps[0];
   state->scene = scene_init();
   
@@ -533,13 +553,17 @@ bool emscripten_main(state_t *state) {
     case GAME: {
       scene_tick(state->scene, dt);
 
-      if (state->P1_score > WIN_SCORE || state->P2_score > WIN_SCORE) { return true; }
+      if (state->P1_score >= WIN_SCORE || state->P2_score >= WIN_SCORE) { 
+        state->mode = POST_GAME;
+        post_game_init(state);
+      }
 
       sdl_clear();
       render_assets(state->game_assets);
+
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
       sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
-      //sdl_render_scene(state->scene, NULL);
+      
       render_scores(state);
       sdl_show();
 
@@ -548,6 +572,9 @@ bool emscripten_main(state_t *state) {
       break;
     }
     case POST_GAME: {
+      sdl_clear();
+      render_assets(state->post_game_assets);
+      sdl_show();
       break;
     }
   }
@@ -558,6 +585,7 @@ bool emscripten_main(state_t *state) {
 void emscripten_free(state_t *state) {
   list_free(state->home_assets);
   list_free(state->game_assets);
+  list_free(state->post_game_assets);
   Mix_FreeChunk(state->shoot_sound);
   Mix_FreeChunk(state->boost_sound);
   scene_free(state->scene);
