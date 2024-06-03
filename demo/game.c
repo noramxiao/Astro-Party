@@ -158,11 +158,11 @@ void reset_game(state_t *state) {
 void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
                 double force_const) {
   state_t *state = aux;
-  entity_info_t *bullet_info = body_get_info(body2);
-  if(bullet_info->team == 0){
+  entity_info_t *ship_info = body_get_info(body1);
+  if(ship_info->team == 1){
     state->P1_score++;
   }
-  if(bullet_info->team == 1){
+  if(ship_info->team == 0){
     state->P2_score++;
   }
   reset_game(state);
