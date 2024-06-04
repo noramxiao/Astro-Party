@@ -115,6 +115,11 @@ vector_t body_get_centroid(body_t *body) {
   return body->centroid;
 }
 
+vector_t body_get_force(body_t *body) {
+  assert(body != NULL);
+  return body->force;
+}
+
 double body_get_rot_inertia(body_t *body) {
   assert(body);
   return body->rot_inertia;

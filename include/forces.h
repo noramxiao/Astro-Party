@@ -143,4 +143,7 @@ void physics_collision_handler(body_t *body1, body_t *body2, vector_t axis,
 void create_physics_collision(scene_t *scene, body_t *body1, body_t *body2,
                               double elasticity);
 
+void create_compound_collision(scene_t *scene, body_t *body1, body_t *body2,
+                              double elasticity);
+
 #endif // #ifndef __FORCES_H__

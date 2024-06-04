@@ -425,7 +425,7 @@ void add_force_creators(state_t *state) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
         if(t == SHIP || t == ASTEROID || t == WALL){
-          create_physics_collision(state->scene, body2, body, ELASTICITY);
+          create_compound_collision(state->scene, body, body2, ELASTICITY);
         }
       }
       break;
@@ -434,8 +434,8 @@ void add_force_creators(state_t *state) {
       for (size_t j = i+1; j < scene_bodies(state->scene); j++) {
         body_t *body2 = scene_get_body(state->scene, j);
         entity_type_t t = get_type(body2);
-        if(t == SHIP || t == ASTEROID || t == WALL){
-          create_physics_collision(state->scene, body2, body, ELASTICITY);
+        if(t == ASTEROID || t == WALL){
+          create_compound_collision(state->scene, body, body2, ELASTICITY);
         }
       }
       break;

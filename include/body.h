@@ -206,6 +206,8 @@ void body_tick(body_t *body, double dt);
  */
 void body_add_force(body_t *body, vector_t force);
 
+vector_t body_get_force(body_t *body);
+
 /**
  * Applies a torque to a body over the current tick.
  * If multiple torques are applied in the same tick, they should be added.

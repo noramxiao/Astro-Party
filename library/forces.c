@@ -205,6 +205,8 @@ void create_rot_drag(scene_t *scene, double gamma, body_t *body) {
                                  bodies);
 }
 
+
+
 /**
  * The force creator for collisions. Checks if the bodies in the collision aux
  * are colliding, and if they do, runs the collision handler on the bodies.
@@ -298,6 +300,7 @@ void physics_collision_handler(body_t *body1, body_t *body2, vector_t axis,
   double u1 = vec_dot(velocity1, axis);
   double u2 = vec_dot(velocity2, axis);
 
+
   double impulse_magnitude = reduced_mass * (1 + force_const) * (u2 - u1);
 
   vector_t impulse = vec_multiply(impulse_magnitude, axis);
@@ -309,5 +312,131 @@ void physics_collision_handler(body_t *body1, body_t *body2, vector_t axis,
 void create_physics_collision(scene_t *scene, body_t *body1, body_t *body2,
                               double elasticity) {
   create_collision(scene, body1, body2, physics_collision_handler, NULL,
+                   elasticity);
+}
+
+
+
+
+
+void contact_collision_handler(body_t *body1, body_t *body2, vector_t axis,
+                               void *aux, double overlap) {
+  double dir = vec_dot(axis, body_get_centroid(body2)) - vec_dot(axis, body_get_centroid(body1));
+
+  if(dir > 0){
+    axis = vec_negate(axis);
+  }
+  double m1 = body_get_mass(body1);
+  double m2 = body_get_mass(body2);
+  double f1 = vec_dot(axis, body_get_force(body1));
+  double f2 = vec_dot(axis, body_get_force(body2));
+
+  double a1 = f1/m1;
+  double a2 = f2/m2;
+
+
+
+  // double d = dir/fabs(dir);
+
+  // if (a1 - a2 > 0){
+  //   return;
+  // }
+
+  double acc = 0;
+  vector_t normal_force;
+  if (m1 == INFINITY){
+    normal_force = vec_multiply(f2, axis);
+    body_set_centroid(body2, vec_add(body_get_centroid(body2), vec_multiply(overlap*0.5, axis)));
+  }
+  else if(m2 == INFINITY){
+    normal_force = vec_multiply(f1, axis);
+    body_set_centroid(body1, vec_add(body_get_centroid(body1), vec_multiply(overlap*0.5, axis)));
+  }
+  else {
+    acc = (f1 + f2)/(m1 + m2);
+    double da1 = acc - a1;
+    normal_force = vec_multiply(da1 * m1, axis);
+    body_set_centroid(body1, vec_add(body_get_centroid(body1), vec_multiply(overlap*m2/(m1+m2), axis)));
+    body_set_centroid(body2, vec_add(body_get_centroid(body2), vec_multiply(-overlap*m1/(m1+m2), axis)));
+  }
+
+  
+  body_add_force(body1, normal_force);
+  body_add_force(body2, vec_negate(normal_force));
+
+  physics_collision_handler(body1, body2, axis, aux, 0);
+}
+
+void create_contact_collision(scene_t *scene, body_t *body1, body_t *body2,
+                              double fric) {
+  create_collision(scene, body1, body2, contact_collision_handler, NULL,
+                   fric);
+}
+
+static void compound_creator(void *collision_aux) {
+  collision_aux_t *col_aux = collision_aux;
+
+  list_t *bodies = col_aux->bodies;
+  body_t *body1 = list_get(bodies, 0);
+  body_t *body2 = list_get(bodies, 1);
+
+  // Check for collision; if bodies collide, call collision_handler
+  bool prev_collision = col_aux->collided;
+
+  collision_info_t info = find_collision(body1, body2);
+  // avoids registering impulse multiple times while bodies are still colliding
+  if (info.collided && !prev_collision) {
+    collision_handler_t handler = col_aux->handler;
+
+    handler(body1, body2, info.axis, col_aux->aux, col_aux->force_const);
+    col_aux->collided = true;
+  } else if (info.collided && prev_collision) {
+    contact_collision_handler(body1, body2, info.axis, col_aux->aux, info.overlap);
+    col_aux->collided = true;
+  }
+  else{
+    col_aux->collided = false;
+  }
+}
+
+void create_compound(scene_t *scene, body_t *body1, body_t *body2,
+                      collision_handler_t handler, void *aux,
+                      double force_const) {
+  list_t *bodies = list_init(2, NULL);
+  list_add(bodies, body1);
+  list_add(bodies, body2);
+
+  list_t *aux_bodies = list_init(2, NULL);
+  list_add(aux_bodies, body1);
+  list_add(aux_bodies, body2);
+
+  collision_aux_t *collision_aux =
+      collision_aux_init(force_const, aux_bodies, handler, false, aux);
+
+  scene_add_bodies_force_creator(scene, compound_creator, collision_aux,
+                                 bodies);
+}
+
+
+void compound_collision_handler(body_t *body1, body_t *body2, vector_t axis,
+                               void *aux, double force_const) {
+  vector_t velocity1 = body_get_velocity(body1);
+  vector_t velocity2 = body_get_velocity(body2);
+
+  double u1 = vec_dot(velocity1, axis);
+  double u2 = vec_dot(velocity2, axis);
+  contact_collision_handler(body1, body2, axis, aux, force_const);
+  if(fabs(u1 - u2) > 1){
+    physics_collision_handler(body1, body2, axis, aux, force_const);
+  }
+  else{
+    contact_collision_handler(body1, body2, axis, aux, force_const);
+  }
+}
+
+
+void create_compound_collision(scene_t *scene, body_t *body1, body_t *body2,
+                              double elasticity) {
+  create_compound(scene, body1, body2, compound_collision_handler, NULL,
                    elasticity);
 }
