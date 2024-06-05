@@ -83,7 +83,12 @@ typedef struct map {
   size_t num_blocks;
   size_t num_asteroids;
   size_t num_blackholes;
-  const char *bg_path;
+  size_t num_bg;
+  const char *backdrop_path;
+  char **bg_paths;
+  vector_t *bg_pos;
+  vector_t *bg_sizes;
+  double *bg_depth;
   vector_t *block_locations;
   vector_t *block_sizes;
   vector_t *blackhole_locations;
@@ -159,7 +164,12 @@ map_t maps[] = {
   {
     .num_blocks = 3,
     .num_asteroids = 10,
-    .bg_path = "assets/space1.png",
+    .num_bg = 2,
+    .backdrop_path = "assets/space1.png",
+    .bg_paths = (char *[]){"assets/neptune.png", "assets/planet1.png"},
+    .bg_pos = (vector_t[]){(vector_t){400, 150}, (vector_t){500, 200}},
+    .bg_sizes = (vector_t[]){(vector_t){300, 300}, (vector_t){150, 150}},
+    .bg_depth = (double[]){6, 3},
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
     (vector_t){300, 300}},
@@ -172,7 +182,8 @@ map_t maps[] = {
   {
     .num_blocks = 4,
     .num_asteroids = 7,
-    .bg_path = "assets/space2.jpg",
+    .num_bg = 0,
+    .backdrop_path = "assets/space2.jpg",
     .block_locations = (vector_t[]){(vector_t){100, 100},
     (vector_t){250, 250},
     (vector_t){400, 100},
@@ -187,7 +198,8 @@ map_t maps[] = {
   {
     .num_blocks = 5,
     .num_asteroids = 12,
-    .bg_path = "assets/space3.jpg",
+    .num_bg = 0,
+    .backdrop_path = "assets/space3.jpg",
     .block_locations = (vector_t[]){(vector_t){150, 150},
     (vector_t){300, 300},
     (vector_t){450, 150},
@@ -204,7 +216,8 @@ map_t maps[] = {
   {
     .num_blocks = 6,
     .num_asteroids = 15,
-    .bg_path = "assets/space4.jpg",
+    .num_bg = 0,
+    .backdrop_path = "assets/space4.jpg",
     .block_locations = (vector_t[]){(vector_t){600, 300},
     (vector_t){200, 400},
     (vector_t){350, 150},
@@ -400,13 +413,22 @@ void init_map(state_t *state){
   add_obstacles(state);
   add_asteroids(state);
 
-  if (map.bg_path != NULL) {
+  if (map.backdrop_path != NULL) {
     SDL_Rect background_bbox = (SDL_Rect){
       .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
     asset_t *background_asset =
-      asset_make_image(map.bg_path, background_bbox);
+      asset_make_image(map.backdrop_path, background_bbox);
     list_add(state->game_assets, background_asset);
   }
+  
+  for(size_t i = 0; i < map.num_bg; i++){
+    SDL_Rect background_bbox = (SDL_Rect){
+      .x = map.bg_pos[i].x, .y = map.bg_pos[i].y, .w = map.bg_sizes[i].x, .h = map.bg_sizes[i].y};
+    asset_t *background_asset =
+      asset_make_image(map.bg_paths[i], background_bbox);
+    list_add(state->game_assets, background_asset);
+  }
+
 }
 
 void handle_turn(body_t *ship, double time_held, double dt) {
@@ -627,6 +649,32 @@ void render_assets(list_t *assets) {
   }
 }
 
+void render_bg_track(state_t *state, vector_t cam_pos, vector_t cam_size) {
+  vector_t center = vec_multiply(0.5, MAX);
+  asset_render_cam(list_get(state->game_assets, 0), center, MAX);
+
+  map_t map = (map_t) state->map;
+  double cam_dist = cam_size.x/MAX.x;
+  for(size_t i = 0; i < map.num_bg; i++){
+    vector_t scaled_diff = vec_multiply(1/map.bg_depth[i], vec_subtract(cam_pos, center));
+    double scale = (map.bg_depth[i] + cam_dist)/(1 + map.bg_depth[i]);
+    asset_render_cam(list_get(state->game_assets, i+1), vec_add(center, scaled_diff), vec_multiply(scale, MAX));
+  }
+  
+}
+
+void render_bg_zoom(state_t *state, vector_t cam_pos, vector_t cam_size) {
+  vector_t center = vec_multiply(0.5, MAX);
+  asset_render_cam(list_get(state->game_assets, 0), center, vec_multiply(0.7, cam_size));
+
+  map_t map = (map_t) state->map;
+  for(size_t i = 0; i < map.num_bg; i++){
+    vector_t scaled_diff = vec_multiply(1/map.bg_depth[i], vec_subtract(cam_pos, center));
+    asset_render_cam(list_get(state->game_assets, i+1), vec_add(center, scaled_diff), cam_size);
+  }
+  
+}
+
 /** 
  * Renders score as a progress bar at the top of the screen.
 */
@@ -708,7 +756,7 @@ void post_game_init(state_t *state) {
 
 vector_t calc_cam_size(state_t *state){
   vector_t diff = vec_subtract(body_get_centroid(state->player1), body_get_centroid(state->player2));
-  diff.x = fmax(fabs(diff.x) * 1.3, 100);
+  diff.x = fmax(fabs(diff.x) * 1.3, 300);
   diff.y = fabs(diff.y) * 1.3;
   if(diff.x > 2*diff.y){
     return (vector_t) {diff.x, diff.x/2};
@@ -767,9 +815,10 @@ bool emscripten_main(state_t *state) {
       }
 
       sdl_clear();
-      render_assets(state->game_assets);
+      //render_assets(state->game_assets);
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), 
                                         body_get_centroid(state->player2)));
+      render_bg_track(state, cam_center, calc_cam_size(state));
       sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
       render_scores(state);
       sdl_show();

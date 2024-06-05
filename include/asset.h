@@ -94,6 +94,7 @@ void asset_on_button_click(asset_t *button, state_t *state, double x, double y);
  */
 void asset_render(asset_t *asset);
 
+void asset_render_cam(asset_t *asset, vector_t cam_center, vector_t cam_size);
 /**
  * Frees the memory allocated for the asset.
  * @param asset the asset to free
