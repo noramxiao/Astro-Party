@@ -293,7 +293,6 @@ void sdl_render_scene(scene_t *scene, void *aux) {
 }
 
 void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector_t cam_size) {
-  sdl_clear();
   size_t body_count = scene_bodies(scene);
   for (size_t i = 0; i < body_count; i++) {
     body_t *body = scene_get_body(scene, i);
@@ -306,7 +305,6 @@ void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector
     body_t *body = aux;
     sdl_draw_polygon(body_get_polygon(body), *body_get_color(body));
   }
-  sdl_show();
 }
 
 void sdl_on_key(key_handler_t handler) { key_handler = handler; }

@@ -141,12 +141,14 @@ void toggle_bot_arrow(state_t *state);
 void add_force_creators(state_t *state);
 
 image_info_t home_images[] = {
+  { .image_path = "assets/space.jpg",
+    .image_box = (SDL_Rect){MIN.x, MIN.y, MAX.x, MAX.y}},
   { .image_path = "assets/title.png",
     .image_box = (SDL_Rect){MAX.x / 4, 60, MAX.x / 2, MAX.y / 3}},
   { .image_path = "assets/box.jpeg",
     .image_box = (SDL_Rect){400, 250, 200, 50},
     .font_path = "assets/Cascadia.ttf",
-    .text_box = (SDL_Rect){415, 260, 200, 75},
+    .text_box = (SDL_Rect){410, 260, 200, 75},
     .text_color = BLACK,
     .text = "Map "},
   { .image_path = "assets/box.jpeg",
@@ -157,7 +159,7 @@ map_t maps[] = {
   {
     .num_blocks = 3,
     .num_asteroids = 10,
-    .bg_path = "assets/space.png",
+    .bg_path = "assets/space1.png",
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
     (vector_t){300, 300}},
@@ -170,6 +172,7 @@ map_t maps[] = {
   {
     .num_blocks = 4,
     .num_asteroids = 7,
+    .bg_path = "assets/space2.jpg",
     .block_locations = (vector_t[]){(vector_t){100, 100},
     (vector_t){250, 250},
     (vector_t){400, 100},
@@ -184,6 +187,7 @@ map_t maps[] = {
   {
     .num_blocks = 5,
     .num_asteroids = 12,
+    .bg_path = "assets/space3.jpg",
     .block_locations = (vector_t[]){(vector_t){150, 150},
     (vector_t){300, 300},
     (vector_t){450, 150},
@@ -200,6 +204,7 @@ map_t maps[] = {
   {
     .num_blocks = 6,
     .num_asteroids = 15,
+    .bg_path = "assets/space4.jpg",
     .block_locations = (vector_t[]){(vector_t){600, 300},
     (vector_t){200, 400},
     (vector_t){350, 150},
@@ -571,14 +576,14 @@ void create_buttons(state_t *state) {
 }
 
 void home_init(state_t *state) {
-  create_buttons(state);
-  
   // image initialization and adding
   size_t n_images = sizeof(home_images) / sizeof(home_images[0]);
   for (size_t i = 0; i < n_images; i++) {
     image_info_t info = home_images[i];
     add_image_from_info(state, info);
   }
+
+  create_buttons(state);
 }
 
 void add_force_creators(state_t *state) {
@@ -654,7 +659,7 @@ void render_scores(state_t *state) {
 */
 void home_render_selected(state_t *state) {
   // Map selection
-  SDL_Rect map_box = (SDL_Rect){465, 260, 10, 10};
+  SDL_Rect map_box = (SDL_Rect){457, 260, 10, 10};
   char *map_selected = " ";
 
   switch (state->map_selected) {
@@ -675,7 +680,7 @@ void home_render_selected(state_t *state) {
   asset_render(map_text);
 
   // Opponent selection
-  SDL_Rect opp_box = (SDL_Rect){415, 325, 10, 10};
+  SDL_Rect opp_box = (SDL_Rect){410, 325, 10, 10};
   char *opp_selected = " ";
   if (state->bot) {
     opp_selected = "Play against AI";
@@ -763,10 +768,9 @@ bool emscripten_main(state_t *state) {
 
       sdl_clear();
       render_assets(state->game_assets);
-
-      vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), body_get_centroid(state->player2)));
+      vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), 
+                                        body_get_centroid(state->player2)));
       sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
-      
       render_scores(state);
       sdl_show();
 
