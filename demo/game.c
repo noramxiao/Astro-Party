@@ -97,6 +97,7 @@ struct state {
   size_t P2_score;
 
   size_t map_selected;
+  bool bot;
   map_t map;
   
   list_t *home_assets;
@@ -134,19 +135,22 @@ typedef struct image_info {
 } image_info_t;
 
 void toggle_play(state_t *state);
-void toggle_left_arrow(state_t *state);
-void toggle_right_arrow(state_t *state);
+void toggle_left_map_arrow(state_t *state);
+void toggle_right_map_arrow(state_t *state);
+void toggle_bot_arrow(state_t *state);
 void add_force_creators(state_t *state);
 
 image_info_t home_images[] = {
   { .image_path = "assets/title.png",
-    .image_box = (SDL_Rect){MAX.x / 4, 100, MAX.x / 2, MAX.y / 3}},
+    .image_box = (SDL_Rect){MAX.x / 4, 60, MAX.x / 2, MAX.y / 3}},
   { .image_path = "assets/box.jpeg",
-    .image_box = (SDL_Rect){400, 300, 200, 50},
+    .image_box = (SDL_Rect){400, 250, 200, 50},
     .font_path = "assets/Cascadia.ttf",
-    .text_box = (SDL_Rect){415, 315, 200, 75},
+    .text_box = (SDL_Rect){415, 260, 200, 75},
     .text_color = BLACK,
-    .text = "Map "}
+    .text = "Map "},
+  { .image_path = "assets/box.jpeg",
+    .image_box = (SDL_Rect){400, 315, 200, 50}}
 };
 
 map_t maps[] = {
@@ -174,8 +178,8 @@ map_t maps[] = {
     (vector_t){75, 75},
     (vector_t){100, 100},
     (vector_t){75, 75}},
-    .start_pos = (vector_t[]){(vector_t){600, 400},
-    (vector_t){300, 100}}
+    .start_pos = (vector_t[]){(vector_t){300, 100},
+    (vector_t){600, 400}}
   },
   {
     .num_blocks = 5,
@@ -217,14 +221,20 @@ double rand_double() { return (double)rand() / RAND_MAX; }
 
 button_info_t button_templates[] = {
     {.image_path = "assets/play_button.png",
-     .image_box = (SDL_Rect){395, 370, 200, 75},
+     .image_box = (SDL_Rect){395, 390, 200, 75},
      .handler = (void *)toggle_play},
     {.image_path = "assets/left_arrow.png",
-     .image_box = (SDL_Rect){320, 295, 75, 75},
-     .handler = (void*)toggle_left_arrow},
+     .image_box = (SDL_Rect){320, 245, 75, 75},
+     .handler = (void*)toggle_left_map_arrow},
     {.image_path = "assets/right_arrow.png",
-     .image_box = (SDL_Rect){600, 295, 75, 75},
-     .handler = (void*)toggle_right_arrow},
+     .image_box = (SDL_Rect){600, 245, 75, 75},
+     .handler = (void*)toggle_right_map_arrow},
+    {.image_path = "assets/left_arrow.png",
+     .image_box = (SDL_Rect){320, 310, 75, 75},
+     .handler = (void*)toggle_bot_arrow},
+    {.image_path = "assets/right_arrow.png",
+     .image_box = (SDL_Rect){600, 310, 75, 75},
+     .handler = (void*)toggle_bot_arrow}
 };
 
 void add_ship(state_t *state, vector_t pos, size_t team) {
@@ -464,7 +474,7 @@ void toggle_play(state_t *state) {
   add_force_creators(state);
 }
 
-void toggle_left_arrow(state_t *state) {
+void toggle_left_map_arrow(state_t *state) {
   if (state->map_selected == 0) {
     state->map_selected = 3;
     return;
@@ -472,9 +482,13 @@ void toggle_left_arrow(state_t *state) {
   state->map_selected--;
 }
 
-void toggle_right_arrow(state_t *state) {
+void toggle_right_map_arrow(state_t *state) {
   state->map_selected++;
   state->map_selected %= 4;
+}
+
+void toggle_bot_arrow(state_t *state) {
+  state->bot = !state->bot;
 }
 
 void handle_buttons(state_t *state, double x, double y) {
@@ -636,28 +650,40 @@ void render_scores(state_t *state) {
 }
 
 /**
- * Displays which map the user has selected, home page only
+ * Displays which map and what opponent type the user has selected, home page only
 */
-void render_map_selected(state_t *state) {
-  SDL_Rect box = (SDL_Rect){455, 315, 10, 10};
-  char *selected = " ";
+void home_render_selected(state_t *state) {
+  // Map selection
+  SDL_Rect map_box = (SDL_Rect){465, 260, 10, 10};
+  char *map_selected = " ";
 
   switch (state->map_selected) {
     case 0:
-      selected = "1";
+      map_selected = "1";
       break;
     case 1:
-      selected = "2";
+      map_selected = "2";
       break;
     case 2:
-      selected = "3";
+      map_selected = "3";
       break;
     default:
-      selected = "4";
+      map_selected = "4";
       break;
   }
-  asset_t *text = asset_make_text(FONT_PATH, box, selected, WHITE);
-  asset_render(text);
+  asset_t *map_text = asset_make_text(FONT_PATH, map_box, map_selected, WHITE);
+  asset_render(map_text);
+
+  // Opponent selection
+  SDL_Rect opp_box = (SDL_Rect){415, 325, 10, 10};
+  char *opp_selected = " ";
+  if (state->bot) {
+    opp_selected = "Play against AI";
+  } else {
+    opp_selected = "Player vs. Player";
+  }
+  asset_t *opp_text = asset_make_text(FONT_PATH, opp_box, opp_selected, WHITE);
+  asset_render(opp_text);
 }
 
 void post_game_init(state_t *state) {
@@ -698,6 +724,7 @@ state_t *emscripten_init() {
   state->P2_score = 0;
   state->time_of_last_shot[0] = 0;
   state->time_of_last_shot[1] = 0;
+  state->bot = false;
   state->map_selected = 0;
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
@@ -722,7 +749,7 @@ bool emscripten_main(state_t *state) {
     case HOME: {
       sdl_clear();
       render_assets(state->home_assets);
-      render_map_selected(state);
+      home_render_selected(state);
       sdl_show();
       break;
     }
