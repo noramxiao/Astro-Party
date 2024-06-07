@@ -32,9 +32,10 @@ const double INIT_SHIP_ANGLES[] = {
   M_PI / 4
 };
 const double PLAYER_ROT_SPEED = -M_PI;
+const double PLAYER_ROT_ACCEL = 3;
 // const double PLAYER_ROT_SPEED = -6 * M_PI;
 const double BOOST_VELOCITY = 400;
-const double BOOST_ANGLE = -M_PI / 2;
+const double BOOST_ANGLE = -M_PI / 3;
 const double BOOST_ROT_SPEED = -3 * M_PI;
 const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
 
@@ -434,11 +435,12 @@ void init_map(state_t *state){
 }
 
 void handle_turn(body_t *ship, double time_held, double dt) {
-  // double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
-  // double da = rot_speed * dt;
-  // double curr_angle = body_get_rotation(ship);
-  // body_set_rotation(ship, curr_angle + da);
-  body_add_rot_impulse(ship, body_get_rot_inertia(ship) * PLAYER_ROT_SPEED);
+  // increase rotation speed at log rate
+  double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * PLAYER_ROT_ACCEL + 1));
+  double da = rot_speed * dt;
+  double curr_angle = body_get_rotation(ship);
+  body_set_rotation(ship, curr_angle + da);
+  // body_add_rot_impulse(ship, body_get_rot_inertia(ship) * PLAYER_ROT_SPEED);
 }
 
 void handle_boost(body_t *ship, double time_since_turn_pressed, 
@@ -472,8 +474,10 @@ void on_key(state_t *state) {
   } else {
     double time_since_last_press = now - get_last_press(P1_TURN);
     double time_since_last_release = now - get_last_release(P1_TURN);
-    handle_boost(p1, time_since_last_press, time_since_last_release, state->boost_sound);
-    set_last_release(P1_TURN);
+    if (time_since_last_press < time_since_last_release) {
+      handle_boost(p1, time_since_last_press, time_since_last_release, state->boost_sound);
+      set_last_release(P1_TURN);
+    }
   }
 
   if (key_state[P2_TURN]) {
@@ -483,8 +487,10 @@ void on_key(state_t *state) {
   } else {
     double time_since_last_press = now - get_last_press(P2_TURN);
     double time_since_last_release = now - get_last_release(P2_TURN);
-    handle_boost(p2, time_since_last_press, time_since_last_release, state->boost_sound);
-    set_last_release(P2_TURN);
+    if (time_since_last_press < time_since_last_release) {
+      handle_boost(p2, time_since_last_press, time_since_last_release, state->boost_sound);
+      set_last_release(P2_TURN);
+    }
   }
 
   if (key_state[P1_SHOOT]) {
@@ -834,12 +840,7 @@ bool emscripten_main(state_t *state) {
       render_scores(state);
       sdl_show();
 
-      const Uint8 *sdl_key_state = SDL_GetKeyboardState(NULL);
-      Uint8 *key_state = malloc(sizeof(Uint8) * 4);
-      key_state[P1_TURN] = sdl_key_state[SDL_SCANCODE_W];
-      key_state[P1_SHOOT] = sdl_key_state[SDL_SCANCODE_Q];
-      key_state[P2_TURN] = sdl_key_state[SDL_SCANCODE_M];
-      key_state[P2_SHOOT] = sdl_key_state[SDL_SCANCODE_N];
+      Uint8 *key_state = sdl_get_keystate();
       if (state->bot) {
         game_info_t *info = malloc(sizeof(game_info_t));
         assert(info);
@@ -856,8 +857,8 @@ bool emscripten_main(state_t *state) {
         free(info);
       }
       
-      state->key_state = key_state;
       state->dt = dt;
+      state->key_state = key_state;
       sdl_is_done(state);
       break;
     }

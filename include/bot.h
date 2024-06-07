@@ -11,6 +11,7 @@ typedef struct game_info {
 	double ship_base;
 	double ship_height;
 	scene_t *scene;
+	double dt;
 } game_info_t;
 
 /**

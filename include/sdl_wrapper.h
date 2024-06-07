@@ -178,6 +178,13 @@ void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector
 void sdl_on_key(key_handler_t handler);
 
 /**
+ * Gets the current state of the keyboard
+ * 
+ * @return a length 4 boolean array of whether or not each player key is pressed
+*/
+Uint8 *sdl_get_keystate();
+
+/**
  * Registers a function to be called every time a mouse is clicked.
  * Overwrites any existing handler.
  *
