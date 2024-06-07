@@ -5,11 +5,11 @@ HOW TO WIN: Win points by shooting your opponent. First to 5 points wins.
 
 KEYBOARD CONTROLS
 Player Red:
- - W: Rotate direction
+ - W: Press/hold to rotate direction
  - Q: Shoot
 
 Player Blue:
- - M: Rotate direction
+ - M: Press/hold to Rotate direction
  - N: Shoot
 
 TIPS:

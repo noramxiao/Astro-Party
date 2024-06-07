@@ -131,13 +131,6 @@ bool sdl_is_done(void *state) {
       case SDL_QUIT:
         free(event);
         return true;
-      case SDL_KEYDOWN:
-      case SDL_KEYUP:
-        // Skip the keypress if no handler is configured
-        // if (key_handler == NULL)
-        //   break;
-        // key_handler(state);
-        break;
       case SDL_MOUSEBUTTONDOWN:
         if (click_handler == NULL) {
           break;

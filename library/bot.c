@@ -37,10 +37,12 @@ bool bullet_will_hit(body_t *p1, body_t *p2, game_info_t *info) {
 	// find the actual distance by plugging time back in
 	vector_t min_disp = vec_add(pos_diff, vec_multiply(time_closest, velo_diff));
 	double min_dist = vec_get_length(min_disp);
-	// estimate if bullet and p2 will collide by checking if dist is less than
-	// the sum of their radii (for p2 we assume radius = average of ship base and
-	// ship height divided by 2)
-	double radii_sum = bullet_radius + (ship_base + ship_height) / 4;
+
+	// assume radius of ship is average of half of ship base and half of ship height
+	double ship_radius = (ship_base + ship_height) / 4;
+	// check if bullet is close enough to ship for collision by comparing sum of 
+	// radii with distance between centroids
+	double radii_sum = bullet_radius + ship_radius;
 	if (min_dist > radii_sum) {
 		return false;
 	}
@@ -52,7 +54,8 @@ bool bullet_will_hit(body_t *p1, body_t *p2, game_info_t *info) {
 	list_t *path_rect = make_rectangle(path_centroid, bullet_radius, path_length);
 	body_t *path_body = body_init(path_rect, 0, DUMMY_COLOR);
 
-	// check if bullet collides with any walls before reaching ship
+	// check if bullet collides with any obstacles before reaching ship
+	// colliding with asteroid is ok since asteroids can be destroyed
 	scene_t *scene = info->scene;
 	size_t n_bodies = scene_bodies(scene);
 	for (size_t i = 0; i < n_bodies; i++) {

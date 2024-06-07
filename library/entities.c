@@ -10,9 +10,9 @@
 
 // color constants
 const rgb_color_t RED = (rgb_color_t) {.r = 1, .g = 0, .b = 0}; 
-const rgb_color_t BLUE = (rgb_color_t) {.r = 0, .g = 0, .b = 1}; 
+const rgb_color_t CYAN = (rgb_color_t) {.r = 0, .g = 1, .b = 1}; 
 const rgb_color_t PURPLE = (rgb_color_t) {.r = 0.6, .g = 0.1, .b = 1}; 
-const rgb_color_t PLAYER_COLORS[] = {RED, BLUE};
+const rgb_color_t PLAYER_COLORS[] = {RED, CYAN};
 const rgb_color_t GRAY = (rgb_color_t) {.r = 0.5, .g = 0.5, .b = 0.5};
 
 entity_info_t *entity_info_init(entity_type_t type, size_t player_idx) {
