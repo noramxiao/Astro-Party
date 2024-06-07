@@ -14,10 +14,10 @@
 
 // Values passed to a key handler when the given arrow key is pressed
 typedef enum {
-  P1_TURN = SDL_SCANCODE_W,
-  P1_SHOOT = SDL_SCANCODE_Q,
-  P2_TURN = SDL_SCANCODE_M,
-  P2_SHOOT = SDL_SCANCODE_N,
+  P1_TURN = 0,
+  P1_SHOOT = 1,
+  P2_TURN = 2,
+  P2_SHOOT = 3,
 } player_key_t;
 
 /**
@@ -39,7 +39,7 @@ typedef enum { KEY_PRESSED, KEY_RELEASED } key_event_type_t;
  * @param type the type of key event (KEY_PRESSED or KEY_RELEASED)
  * @param held_time if a press event, the time the key has been held in seconds
  */
-typedef void (*key_handler_t)(const Uint8 *key_state, void *state);
+typedef void (*key_handler_t)(void *state);
                               
 /**
  * A click handler.

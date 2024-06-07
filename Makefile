@@ -3,7 +3,7 @@ DEMOS = breakout
 TEST_DEMOS = breakout pegs
 # List of C files in "libraries" that you will write.
 # This also defines the order in which the tests are run.
-STUDENT_LIBS = vector list polygon body scene color forces collision emscripten sdl_wrapper
+STUDENT_LIBS = vector list polygon body scene color forces collision emscripten sdl_wrapper bot
 
 # find <dir> is the command to find files in a directory
 # ! -name .gitignore tells find to ignore the .gitignore
@@ -129,7 +129,7 @@ DEMO_REF_OBJS = $(addprefix $(REF_FOLDER)/,$(DEMO_REF:=.wasm.ref.o))
 GAME_REF = emscripten
 GAME_REF_OBJS = $(addprefix $(REF_FOLDER)/,$(GAME_REF:=.wasm.ref.o))
 
-GAME_STUDENT = shapes vector body scene list color polygon forces collision sdl_wrapper asset_cache asset entities game
+GAME_STUDENT = shapes vector body scene list color polygon forces collision sdl_wrapper asset_cache asset entities game bot
 GAME_STUDENT_OBJS = $(addprefix out/,$(GAME_STUDENT:=.wasm.o))
 
 TEST_REF = asset_cache asset

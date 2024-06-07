@@ -31,7 +31,8 @@ const double INIT_SHIP_ANGLES[] = {
   5 * M_PI / 4,
   M_PI / 4
 };
-const double PLAYER_ROT_SPEED = -4 * M_PI;
+const double PLAYER_ROT_SPEED = -M_PI;
+// const double PLAYER_ROT_SPEED = -6 * M_PI;
 const double BOOST_VELOCITY = 400;
 const double BOOST_ANGLE = -M_PI / 2;
 const double BOOST_ROT_SPEED = -3 * M_PI;
@@ -113,6 +114,7 @@ struct state {
 
   scene_t *scene;
   double dt;
+  Uint8 *key_state;
 };
 
 typedef struct button_info {
@@ -410,10 +412,11 @@ void init_map(state_t *state){
 }
 
 void handle_turn(body_t *ship, double time_held, double dt) {
-  double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
-  double da = rot_speed * dt;
-  double curr_angle = body_get_rotation(ship);
-  body_set_rotation(ship, curr_angle + da);
+  // double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * 5 + 1));
+  // double da = rot_speed * dt;
+  // double curr_angle = body_get_rotation(ship);
+  // body_set_rotation(ship, curr_angle + da);
+  body_add_rot_impulse(ship, body_get_rot_inertia(ship) * PLAYER_ROT_SPEED);
 }
 
 void handle_boost(body_t *ship, double time_since_turn_pressed, 
@@ -428,8 +431,10 @@ void handle_boost(body_t *ship, double time_since_turn_pressed,
   }
 }
 
-void on_key(Uint8 *key_state, state_t *state) {
-  if (state->mode != GAME) { return; }
+void on_key(state_t *state) {
+  if (state->mode != GAME || !state->key_state) { 
+    return; 
+  }
 
   body_t *p1 = state->player1;
   body_t *p2 = state->player2;
@@ -437,6 +442,7 @@ void on_key(Uint8 *key_state, state_t *state) {
   double dt = state->dt;
   double now = clock(); 
 
+  Uint8 *key_state = state->key_state;
   if (key_state[P1_TURN]) {
     double time_held = fmax(dt, get_time_held(P1_TURN));
     handle_turn(p1, time_held, dt);
@@ -468,6 +474,9 @@ void on_key(Uint8 *key_state, state_t *state) {
     handle_shoot(state, p2);
     set_last_press(P2_SHOOT);
   }
+
+  free(key_state);
+  state->key_state = NULL;
 }
 
 void toggle_play(state_t *state) {
@@ -734,6 +743,8 @@ state_t *emscripten_init() {
   state->home_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->post_game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
+  state->dt = 0;
+  state->key_state = NULL;
   state->scene = scene_init();
   
   home_init(state);
@@ -774,6 +785,29 @@ bool emscripten_main(state_t *state) {
       render_scores(state);
       sdl_show();
 
+      const Uint8 *sdl_key_state = SDL_GetKeyboardState(NULL);
+      Uint8 *key_state = malloc(sizeof(Uint8) * 4);
+      key_state[P1_TURN] = sdl_key_state[SDL_SCANCODE_W];
+      key_state[P1_SHOOT] = sdl_key_state[SDL_SCANCODE_Q];
+      key_state[P2_TURN] = sdl_key_state[SDL_SCANCODE_M];
+      key_state[P2_SHOOT] = sdl_key_state[SDL_SCANCODE_N];
+      if (state->bot) {
+        game_info_t *info = malloc(sizeof(game_info_t));
+        assert(info);
+        *info = (game_info_t) {
+          .p1 = state->player1,
+          .p2 = state->player2,
+          .bullet_speed = BULLET_SPEED,
+          .bullet_radius = BULLET_RADIUS,
+          .ship_base = SHIP_BASE,
+          .ship_height = SHIP_HEIGHT,
+          .scene = state->scene,
+        };
+        bot_move(key_state, info, state->player2);
+        free(info);
+      }
+      
+      state->key_state = key_state;
       state->dt = dt;
       sdl_is_done(state);
       break;

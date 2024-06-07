@@ -119,20 +119,15 @@ void sdl_init(vector_t min, vector_t max) {
   TTF_Init();
 }
 
-bool custom_poll_event(SDL_Event *event) {
-  const Uint8 *key_state = SDL_GetKeyboardState(NULL);
-  for (size_t i = 0; i < NUM_PLAYER_KEYS; i++) {
-    if (key_state[PLAYER_KEYS[i]]) {
-      event->type = SDL_KEYDOWN;
-      return true;
-    }
-  }
-  return SDL_PollEvent(event);
-}
-
 bool sdl_is_done(void *state) {
+  // if (key_handler != NULL) {
+  //   printf("calling key handler\n");
+  //   key_handler(state);
+  // }
+
   SDL_Event *event = malloc(sizeof(*event));
-  assert(event != NULL);
+  assert(event);
+
   while (SDL_PollEvent(event)) {
     switch (event->type) {
     case SDL_QUIT:
@@ -141,12 +136,10 @@ bool sdl_is_done(void *state) {
     case SDL_KEYDOWN:
     case SDL_KEYUP:
       // Skip the keypress if no handler is configured
-      // or an unrecognized key was pressed
       if (key_handler == NULL)
         break;
       
-      const Uint8 *key_state = SDL_GetKeyboardState(NULL);
-      key_handler(key_state, state);
+      key_handler(state);
       break;
     case SDL_MOUSEBUTTONDOWN:
       if (click_handler == NULL) {
@@ -157,6 +150,7 @@ bool sdl_is_done(void *state) {
     }
   }
   free(event);
+
   return false;
 }
 
