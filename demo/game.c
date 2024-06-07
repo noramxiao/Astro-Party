@@ -22,7 +22,7 @@ const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
 const size_t N_PLAYERS = 2;
 const size_t SCORE_HEIGHT = 30; // height of entire score bar
-const char *FONT_PATH = "assets/Cascadia.ttf";
+const char *FONT_PATH = "assets/Roboto.ttf";
 const char *GAME_OVER_MSG = "Game over! Winner is: Player ";
 const rgb_color_t BLACK = (rgb_color_t){.r = 1, .g = 1, .b = 1};
 
@@ -52,7 +52,7 @@ const double THRUST_POWER = 3000;
 const double DRAG_COEF = 30;
 const double ROT_DRAG_FACTOR = 7;
 
-const rgb_color_t WHITE = (rgb_color_t){0, 1, 1};
+const rgb_color_t WHITE = (rgb_color_t){1, 1, 1};
 
 // ship constants
 const double SHIP_MASS = 10;
@@ -152,12 +152,19 @@ image_info_t home_images[] = {
     .image_box = (SDL_Rect){MAX.x / 4, 60, MAX.x / 2, MAX.y / 3}},
   { .image_path = "assets/box.jpeg",
     .image_box = (SDL_Rect){400, 250, 200, 50},
-    .font_path = "assets/Cascadia.ttf",
+    .font_path = "assets/Roboto.ttf",
     .text_box = (SDL_Rect){410, 260, 200, 75},
     .text_color = BLACK,
     .text = "Map "},
   { .image_path = "assets/box.jpeg",
     .image_box = (SDL_Rect){400, 315, 200, 50}}
+};
+
+image_info_t post_game_images[] = {
+  { .image_path = "assets/space.jpg",
+    .image_box = (SDL_Rect){MIN.x, MIN.y, MAX.x, MAX.y}},
+  { .image_path = "assets/box.jpeg",
+    .image_box = (SDL_Rect){300, 200, 400, 50}}
 };
 
 map_t maps[] = {
@@ -177,7 +184,7 @@ map_t maps[] = {
     (vector_t){100, 100}, 
     (vector_t){100, 100}},
     .start_pos = (vector_t[]){(vector_t){100, 300}, 
-    (vector_t){400, 200}}
+    (vector_t){700, 200}}
   },
   {
     .num_blocks = 4,
@@ -567,21 +574,25 @@ asset_t *create_button_from_info(state_t *state, button_info_t info) {
 }
 
 /**
- * Using `info`, initializes an image in the home scene and adds to asset list.
+ * Using `info`, initializes an image and adds to list.
  *
- * @param info the image info struct used to initialize the button
+ * @param list list to add the image asset to
+ * @param info the image info struct used to initialize the image
  */
-void add_image_from_info(state_t *state, image_info_t info) {
-  asset_t *image_asset = NULL;
-  asset_t *text_asset = NULL;
-  if (info.image_path != NULL) {
-    image_asset = asset_make_image(info.image_path, info.image_box);
-    list_add(state->home_assets, image_asset);
+void add_image_from_info(list_t *list, image_info_t info[], size_t info_size) {
+  for (size_t i = 0; i < info_size; i++) {
+    image_info_t img = info[i];
+    asset_t *image_asset = NULL;
+    asset_t *text_asset = NULL;
+    if (img.image_path != NULL) {
+      image_asset = asset_make_image(img.image_path, img.image_box);
+      list_add(list, image_asset);
+    }
+    if (img.font_path != NULL) {
+      text_asset = asset_make_text(img.font_path, img.text_box, img.text,
+                                  img.text_color);
+      list_add(list, text_asset);
   }
-  if (info.font_path != NULL) {
-    text_asset = asset_make_text(info.font_path, info.text_box, info.text,
-                                 info.text_color);
-    list_add(state->home_assets, text_asset);
   }
 }
 
@@ -598,13 +609,8 @@ void create_buttons(state_t *state) {
 }
 
 void home_init(state_t *state) {
-  // image initialization and adding
-  size_t n_images = sizeof(home_images) / sizeof(home_images[0]);
-  for (size_t i = 0; i < n_images; i++) {
-    image_info_t info = home_images[i];
-    add_image_from_info(state, info);
-  }
-
+  size_t size = sizeof(home_images) / sizeof(home_images[0]);
+  add_image_from_info(state->home_assets, home_images, size);
   create_buttons(state);
 }
 
@@ -707,7 +713,7 @@ void render_scores(state_t *state) {
 */
 void home_render_selected(state_t *state) {
   // Map selection
-  SDL_Rect map_box = (SDL_Rect){457, 260, 10, 10};
+  SDL_Rect map_box = (SDL_Rect){452, 262, 10, 10};
   char *map_selected = " ";
 
   switch (state->map_selected) {
@@ -740,6 +746,9 @@ void home_render_selected(state_t *state) {
 }
 
 void post_game_init(state_t *state) {
+  size_t size = sizeof(post_game_images) / sizeof(post_game_images[0]);
+  add_image_from_info(state->post_game_assets, post_game_images, size);
+
   char *msg = strdup(GAME_OVER_MSG);
   ssize_t winner = state->P1_score - state->P2_score; 
   if (winner > 0) {
@@ -748,8 +757,8 @@ void post_game_init(state_t *state) {
     msg = strcat(msg, "Blue");
   }
 
-  SDL_Rect box = (SDL_Rect){MAX.x / 4, 0.25 * MAX.y, MAX.x / 4, MAX.y / 4};
-  asset_t *msg_asset = asset_make_text(FONT_PATH, box, msg, BLACK);
+  SDL_Rect box = (SDL_Rect){315, 215, MAX.x / 4, MAX.y / 4};
+  asset_t *msg_asset = asset_make_text(FONT_PATH, box, msg, WHITE);
 
   list_add(state->post_game_assets, msg_asset);
 }
@@ -773,8 +782,8 @@ state_t *emscripten_init() {
   srand(time(NULL));
   state_t *state = malloc(sizeof(state_t));
   state->mode = HOME;
-  state->P1_score = 0;
-  state->P2_score = 0;
+  state->P1_score = 4;
+  state->P2_score = 4;
   state->time_of_last_shot[0] = 0;
   state->time_of_last_shot[1] = 0;
   state->bot = false;
@@ -783,11 +792,10 @@ state_t *emscripten_init() {
   state->game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->post_game_assets = list_init(INITIAL_GAME_CAPACITY, (free_func_t) asset_destroy);
   state->scene = scene_init();
-  
-  home_init(state);
-
   state->shoot_sound = sdl_load_sound(SHOOT_SOUND_PATH);
   state->boost_sound = sdl_load_sound(BOOST_SOUND_PATH);
+  
+  home_init(state);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);

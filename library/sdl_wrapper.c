@@ -149,10 +149,9 @@ bool sdl_is_done(void *state) {
       key_handler(key_state, state);
       break;
     case SDL_MOUSEBUTTONDOWN:
-      if (click_handler == NULL) {
-        break;
+      if (click_handler != NULL) {
+        click_handler(state, event->motion.x, event->motion.y);
       }
-      click_handler(state, event->motion.x, event->motion.y);
       break;
     }
   }
