@@ -254,4 +254,8 @@ SDL_Rect get_bounding_box(body_t *body);
  */
 double time_since_last_tick(void);
 
+double get_window_width(void);
+
+double get_window_height(void);
+
 #endif // #ifndef __SDL_WRAPPER_H__

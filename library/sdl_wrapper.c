@@ -379,3 +379,11 @@ double time_since_last_tick(void) {
   last_clock = now;
   return difference;
 }
+
+double get_window_width(){
+  return WINDOW_WIDTH;
+}
+
+double get_window_height(){
+  return WINDOW_HEIGHT;
+}

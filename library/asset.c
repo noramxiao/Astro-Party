@@ -172,4 +172,45 @@ void asset_render(asset_t *asset) {
   }
 }
 
+void asset_render_cam(asset_t *asset, vector_t cam_center, vector_t cam_size) {
+  vector_t pos = (vector_t){.x = (double)((asset->bounding_box.x - cam_center.x + cam_size.x/2)*get_window_width()/cam_size.x), 
+      .y = (double)((asset->bounding_box.y + cam_center.y - get_window_height() + cam_size.y/2)*get_window_height()/cam_size.y)};
+  vector_t size = (vector_t){.x = (double)(asset->bounding_box.w*get_window_width()/cam_size.x), .y = (double)(asset->bounding_box.h*get_window_height()/cam_size.y)};
+
+  switch (asset->type) {
+  case ASSET_IMAGE: {
+    image_asset_t *image_asset = (image_asset_t *)asset;
+    if (image_asset->body) {
+      SDL_Rect bbox = get_bounding_box(image_asset->body);
+      pos = (vector_t){.x = (double)((bbox.x - cam_center.x + cam_size.x/2)*get_window_width()/cam_size.x), 
+      .y = (double)((bbox.y + cam_center.y - get_window_height() + cam_size.y/2)*get_window_height()/cam_size.y)};
+      size = (vector_t){.x = (double)(bbox.w*get_window_width()/cam_size.x), .y = (double)(bbox.h*get_window_height()/cam_size.y)};
+    }
+    sdl_draw_image(image_asset->texture, pos, size);
+    break;
+  }
+  case ASSET_FONT: {
+    text_asset_t *text_asset = (text_asset_t *)asset;
+    SDL_Color *color = sdl_load_color(text_asset->color.r, text_asset->color.g,
+                                      text_asset->color.b, 0);
+    sdl_draw_text(text_asset->font, text_asset->text, color, pos);
+    break;
+  }
+  case ASSET_BUTTON: {
+    button_asset_t *button = (button_asset_t *)asset;
+    if (button->image_asset != NULL) {
+      asset_render((asset_t *)button->image_asset);
+    }
+    if (button->text_asset != NULL) {
+      asset_render((asset_t *)button->text_asset);
+    }
+    button->is_rendered = true;
+    break;
+  }
+  default: {
+    assert(false);
+  }
+  }
+}
+
 void asset_destroy(asset_t *asset) { free(asset); }
