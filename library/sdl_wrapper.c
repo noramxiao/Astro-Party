@@ -119,44 +119,28 @@ void sdl_init(vector_t min, vector_t max) {
   TTF_Init();
 }
 
-bool custom_poll_event(SDL_Event *event) {
-  const Uint8 *key_state = SDL_GetKeyboardState(NULL);
-  for (size_t i = 0; i < NUM_PLAYER_KEYS; i++) {
-    if (key_state[PLAYER_KEYS[i]]) {
-      event->type = SDL_KEYDOWN;
-      return true;
-    }
-  }
-  return SDL_PollEvent(event);
-}
-
 bool sdl_is_done(void *state) {
+  if (key_handler != NULL)
+    key_handler(state);
+
   SDL_Event *event = malloc(sizeof(*event));
-  assert(event != NULL);
+  assert(event);
+
   while (SDL_PollEvent(event)) {
     switch (event->type) {
-    case SDL_QUIT:
-      free(event);
-      return true;
-    case SDL_KEYDOWN:
-    case SDL_KEYUP:
-      // Skip the keypress if no handler is configured
-      // or an unrecognized key was pressed
-      if (key_handler == NULL)
-        break;
-      
-      const Uint8 *key_state = SDL_GetKeyboardState(NULL);
-      key_handler(key_state, state);
-      break;
-    case SDL_MOUSEBUTTONDOWN:
-      if (click_handler == NULL) {
-        break;
+      case SDL_QUIT:
+        free(event);
+        return true;
+      case SDL_MOUSEBUTTONDOWN:
+        if (click_handler == NULL) {
+          break;
+        }
+        click_handler(state, event->motion.x, event->motion.y);
+        // break;
       }
-      click_handler(state, event->motion.x, event->motion.y);
-      break;
-    }
   }
   free(event);
+
   return false;
 }
 
@@ -308,6 +292,17 @@ void sdl_render_scene_cam(scene_t *scene, void *aux, vector_t cam_center, vector
 }
 
 void sdl_on_key(key_handler_t handler) { key_handler = handler; }
+
+Uint8 *sdl_get_keystate() {
+  const Uint8 *sdl_key_state = SDL_GetKeyboardState(NULL);
+  Uint8 *key_state = malloc(sizeof(bool) * 4);
+  key_state[P1_TURN] = sdl_key_state[SDL_SCANCODE_W];
+  key_state[P1_SHOOT] = sdl_key_state[SDL_SCANCODE_Q];
+  key_state[P2_TURN] = sdl_key_state[SDL_SCANCODE_M];
+  key_state[P2_SHOOT] = sdl_key_state[SDL_SCANCODE_N];
+  return key_state;
+}
+
 void sdl_on_click(click_handler_t handler) { click_handler = handler; }
 
 void set_last_press(player_key_t key) {

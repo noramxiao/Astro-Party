@@ -1,16 +1,17 @@
 #include "list.h"
 #include "body.h"
+#include "scene.h"
 #include "sdl_wrapper.h"
 
 typedef struct game_info {
 	body_t *p1;
 	body_t *p2;
-	const double bullet_dist;
-	const double bullet_speed;
-	const double bullet_radius;
-	const double ship_base;
-	const double ship_height;
-	list_t *bodies;
+	double bullet_speed;
+	double bullet_radius;
+	double ship_base;
+	double ship_height;
+	scene_t *scene;
+	double dt;
 } game_info_t;
 
 /**

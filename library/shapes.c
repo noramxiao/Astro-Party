@@ -8,7 +8,6 @@
 #include <assert.h>
 
 const size_t CIRC_POINTS = 100;
-const double PI = 3.141592653589793238462643383279502884197;
 
 list_t *make_rectangle(vector_t centroid, double width, double height) {
   list_t *points = list_init(4, free);
@@ -56,7 +55,7 @@ list_t *make_iso_triangle(vector_t centroid, double base, double height) {
 list_t *make_circle(vector_t centroid, double radius) {
   list_t *points = list_init(CIRC_POINTS, free);
   for (size_t i = 0; i < CIRC_POINTS; i++) {
-    double angle = 2 * PI * i / CIRC_POINTS;
+    double angle = 2 * M_PI * i / CIRC_POINTS;
     vector_t *p = malloc(sizeof(vector_t));
     *p = (vector_t){centroid.x + radius * cos(angle),
                     centroid.y + radius * sin(angle)};
