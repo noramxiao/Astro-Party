@@ -246,6 +246,10 @@ Mix_Chunk *sdl_load_sound(const char* sound_path);
 */
 void sdl_play_sound(Mix_Chunk *sound);
 
+Mix_Music *sdl_load_music(const char* sound_path);
+
+void sdl_play_music(Mix_Music *music);
+
 /**
  * Finds the smallest bounding box for a body
  *

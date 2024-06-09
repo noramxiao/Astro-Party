@@ -44,6 +44,7 @@ const double RELOAD_TIME = 0.5;
 // sound constants
 const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
 const char *BOOST_SOUND_PATH = "assets/sounds/boost.wav";
+const char *BACKGROUND_TRACK = "assets/music/outro.ogg";
 
 const double BULLET_SPEED = 500;
 
@@ -117,6 +118,7 @@ struct state {
   
   Mix_Chunk *shoot_sound;
   Mix_Chunk *boost_sound;
+  Mix_Music *backing_track;
 
   scene_t *scene;
   double dt;
@@ -174,12 +176,12 @@ map_t maps[] = {
   {
     .num_blocks = 3,
     .num_asteroids = 10,
-    .num_bg = 2,
+    .num_bg = 3,
     .backdrop_path = "assets/space1.png",
-    .bg_paths = (char *[]){"assets/neptune.png", "assets/planet1.png"},
-    .bg_pos = (vector_t[]){(vector_t){400, 150}, (vector_t){500, 200}},
-    .bg_sizes = (vector_t[]){(vector_t){300, 300}, (vector_t){150, 150}},
-    .bg_depth = (double[]){6, 3},
+    .bg_paths = (char *[]){"assets/neptune.png", "assets/planet1.png", "assets/earthlike.png"},
+    .bg_pos = (vector_t[]){(vector_t){400, 150}, (vector_t){500, 200}, (vector_t){250, 280}},
+    .bg_sizes = (vector_t[]){(vector_t){300, 300}, (vector_t){150, 150}, (vector_t){120, 120}},
+    .bg_depth = (double[]){6, 3, 2},
     .block_locations = (vector_t[]){(vector_t){100, 100}, 
     (vector_t){200, 200}, 
     (vector_t){300, 300}},
@@ -521,6 +523,7 @@ void toggle_play(state_t *state) {
   state->player2 = scene_get_body(state->scene, 1);
 
   add_force_creators(state);
+  sdl_play_music(state->backing_track);
 }
 
 void toggle_left_map_arrow(state_t *state) {
@@ -625,6 +628,7 @@ void create_buttons(state_t *state) {
 
 void home_init(state_t *state) {
   size_t size = sizeof(home_images) / sizeof(home_images[0]);
+  
   add_image_from_info(state->home_assets, home_images, size);
   create_buttons(state);
 }
@@ -811,6 +815,7 @@ state_t *emscripten_init() {
   state->scene = scene_init();
   state->shoot_sound = sdl_load_sound(SHOOT_SOUND_PATH);
   state->boost_sound = sdl_load_sound(BOOST_SOUND_PATH);
+  state->backing_track = sdl_load_music(BACKGROUND_TRACK);
   
   home_init(state);
 
@@ -832,6 +837,7 @@ bool emscripten_main(state_t *state) {
       break;
     }
     case GAME: {
+      
       scene_tick(state->scene, dt);
 
       if (state->P1_score >= WIN_SCORE || state->P2_score >= WIN_SCORE) { 
@@ -887,6 +893,7 @@ void emscripten_free(state_t *state) {
   list_free(state->post_game_assets);
   Mix_FreeChunk(state->shoot_sound);
   Mix_FreeChunk(state->boost_sound);
+  Mix_FreeMusic(state->backing_track);
   scene_free(state->scene);
   asset_cache_destroy();
   free(state);
