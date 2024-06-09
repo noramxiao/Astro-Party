@@ -57,6 +57,8 @@ double last_releases[] = {0, 0, 0, 0};
 const player_key_t PLAYER_KEYS[] = {P1_TURN, P1_SHOOT, P2_TURN, P2_SHOOT};
 const size_t NUM_PLAYER_KEYS = sizeof(PLAYER_KEYS) / sizeof(player_key_t);
 
+Uint16 MUSIC_FORMAT = AUDIO_S16SYS;
+
 /** Computes the center of the window in pixel coordinates */
 vector_t get_window_center(void) {
   int *width = malloc(sizeof(*width)), *height = malloc(sizeof(*height));
@@ -115,7 +117,11 @@ void sdl_init(vector_t min, vector_t max) {
                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                             SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-  Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048))
+  {
+  fprintf(stderr, "Unable to open audio: %s.\n", Mix_GetError());
+  exit(1);
+  }
   TTF_Init();
 }
 
@@ -345,8 +351,22 @@ Mix_Chunk *sdl_load_sound(const char* sound_path) {
   return Mix_LoadWAV(sound_path);
 }
 
+Mix_Music *sdl_load_music(const char* sound_path) {
+  Mix_Music *mus = Mix_LoadMUS(sound_path);
+  if( mus == NULL )
+  {
+    printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+    exit(1);
+  }
+  return mus;
+}
+
 void sdl_play_sound(Mix_Chunk *sound) {
   Mix_PlayChannel(-1, sound, 0);
+}
+
+void sdl_play_music(Mix_Music *music) {
+  Mix_PlayMusic(music, -1 );
 }
 
 SDL_Rect get_bounding_box(body_t *body) {
