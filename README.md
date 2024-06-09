@@ -45,13 +45,13 @@
 
 ### Priority 1 Features
 - **Controls:** Implementation of keyboard controls (Marco)
-- **Vector Graphics:** Create graphics for spaceships, pilots, and bullets (Marco)
+- **Vector Graphics:** Create graphics for spaceships, obstacles, and bullets (Marco)
 - **Map:** Implementation of arena borders and obstacles (Justin)
 - **Game Flow:** Implement logic to determine winner/loser and when to switch scenes (Nora)
 
 ### Priority 2 Features
-- **Advanced Movement:** Implement double tap turn button to boost and recoil when spaceship shoots (Marco)
-- **Advanced Physics:** Implementation of drag forces and acceleration for spaceship velocity cap and friction for when spaceship is in contact with arena border (Justin)
+- **Advanced Movement:** Implement double tap turn button to boost (Marco)
+- **Advanced Physics:** Implementation of drag and thrust forces for spaceship velocity cap (Justin)
 - **Basic HUD:** Display player lives and scores (Nora)
 
 ### Priority 3 Features
@@ -60,10 +60,9 @@
 - **UI:** Create UI for homepage and render images, backgrounds, and text for all pages (Nora)
 
 ### Priority 4 Features
-- **Custom Graphics:** Create custom sprites for spaceships and arenas (Nora)
 - **Multiple arenas:** Create multiple arenas and allow selection (Nora)
 - **Music:** Background music for gameplay (Justin)
-- **AI Opponents:** Implement AI for solo play or to fill multiplayer slots (Marco)
+- **AI Opponents:** Implement AI to take over player 2 (Marco)
 
 ## Section 3: Timeline
 
