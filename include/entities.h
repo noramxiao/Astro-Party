@@ -47,21 +47,6 @@ body_t *make_ship(vector_t centroid, size_t player_idx, vector_t velocity,
 									const double mass);
 
 /** 
- * Creates a rectangle shaped body for a pilot.
- * 
- * @param centroid centroid of the pilot
- * @param player_idx which player the pilot belongs to
- * @param velocity initial velocity of the pilot
- * @param angle initial angle of pilot
- * @param mass mass of pilot
- * @param dims rectangle dimensions for pilot body
- * 
- * @return a pointer to the pilot body
-*/
-body_t *make_pilot(vector_t centroid, size_t player_idx, vector_t velocity, 
-									 double angle, double mass, vector_t dims);
-
-/** 
  * Creates a body of a circle shape for a bullet.
  * 
  * @param ship_centroid centroid of the ship

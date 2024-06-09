@@ -5,72 +5,120 @@
 #include "entities.h"
 #include "scene.h"
 #include "shapes.h"
+#include "sdl_wrapper.h"
 #include "stdlib.h"
 #include "stdio.h"
 #include "vector.h"
 
 #include <math.h>
 
-const vector_t UP_UNIT_VEC = (vector_t) {.x = 0, .y = 1};
 const rgb_color_t DUMMY_COLOR = (rgb_color_t) {.r = 0, .g = 0, .b = 0};
 
-bool bullet_will_hit(body_t *p1, body_t *p2, game_info_t *info) {
-	const double bullet_speed = info->bullet_speed;
-	const double bullet_radius = info->bullet_radius;
-	const double ship_base = info->ship_base;
-	const double ship_height = info->ship_height;
-	const double bullet_dist = ship_height * 2 / 3 + bullet_radius + 1;
-
-	double p1_angle = body_get_rotation(p1);
-	vector_t spawn_disp = vec_make(bullet_dist, p1_angle);
-	vector_t p1_pos = body_get_centroid(p1);
-	vector_t bullet_spawn = vec_add(p1_pos, spawn_disp);
-	vector_t bullet_velo = vec_make(bullet_speed, p1_angle);
-	vector_t p2_pos = body_get_centroid(p2);
-	vector_t p2_velo = body_get_velocity(p2);
+/**
+ * Calculate the time at which two bodies are closest given current velocities
+*/
+double get_time_closest(body_t *b1, body_t *b2) {
+	vector_t pos1 = body_get_centroid(b1);
+	vector_t v1 = body_get_velocity(b1);
+	vector_t pos2 = body_get_centroid(b2);
+	vector_t v2 = body_get_velocity(b2);
 
 	// find time of minimum distance between bullet and p2
-	vector_t velo_diff = vec_subtract(p2_velo, bullet_velo);
-	vector_t pos_diff = vec_subtract(p2_pos, bullet_spawn);
+	vector_t pos_diff = vec_subtract(pos2, pos1);
+	vector_t velo_diff = vec_subtract(v2, v1);
 	double time_closest = -vec_dot(velo_diff, pos_diff) / vec_dot(velo_diff, velo_diff);
+	return time_closest;
+}
 
-	// find the actual distance by plugging time back in
-	vector_t min_disp = vec_add(pos_diff, vec_multiply(time_closest, velo_diff));
-	double min_dist = vec_get_length(min_disp);
+/**
+ * Check if two bodies will collide
+ */
+bool will_collide(body_t *b1, body_t *b2, double b1_width, double b2_width, scene_t *scene) {
+	double time_closest = get_time_closest(b1, b2);
 
-	// assume radius of ship is average of half of ship base and half of ship height
-	double ship_radius = (ship_base + ship_height) / 4;
-	// check if bullet is close enough to ship for collision by comparing sum of 
-	// radii with distance between centroids
-	double radii_sum = bullet_radius + ship_radius;
-	if (min_dist > radii_sum) {
+	// set b1 centroid to be at point closest to b2
+	vector_t b1_centroid = body_get_centroid(b1);
+	vector_t b1_path = vec_multiply(time_closest, body_get_velocity(b1));
+	vector_t new_b1_centroid = vec_add(b1_centroid, b1_path);
+	body_set_centroid(b1, new_b1_centroid);
+
+	// set b2 centroid to be at point closest to b1
+	vector_t b2_centroid = body_get_centroid(b2);
+	vector_t b2_path = vec_multiply(time_closest, body_get_velocity(b2));
+	vector_t new_b2_centroid = vec_add(b2_centroid, b2_path);
+	body_set_centroid(b2, new_b2_centroid);
+
+	// check for collision between bullet and p2 at time_closest
+	collision_info_t coll_info = find_collision(b1, b2);
+	if (!coll_info.collided) {
 		return false;
 	}
-	
-	// create body for bullet path to use for collision checking
-	vector_t bullet_path = vec_multiply(time_closest, bullet_velo);
-	vector_t path_centroid = vec_add(bullet_spawn, vec_multiply(0.5, bullet_path));
-	double path_length = vec_get_length(bullet_path);
-	list_t *path_rect = make_rectangle(path_centroid, bullet_radius, path_length);
-	body_t *path_body = body_init(path_rect, 0, DUMMY_COLOR);
 
-	// check if bullet collides with any obstacles before reaching ship
-	// colliding with asteroid is ok since asteroids can be destroyed
-	scene_t *scene = info->scene;
+	body_set_centroid(b1, b1_centroid);
+	body_set_centroid(b2, b2_centroid);
+
+	// create bodies for the b1 and b2 paths
+	vector_t b1_path_centroid = vec_add(b1_centroid, vec_multiply(0.5, b1_path));
+	double b1_path_length = vec_get_length(b1_path);
+	list_t *b1_path_rect = make_rectangle(b1_path_centroid, b1_width, b1_path_length);
+	body_t *b1_path_body = body_init(b1_path_rect, 0, DUMMY_COLOR);
+	vector_t b2_path_centroid = vec_add(b2_centroid, vec_multiply(0.5, b2_path));
+	double b2_path_length = vec_get_length(b2_path);
+	list_t *b2_path_rect = make_rectangle(b2_path_centroid, b2_width, b2_path_length);
+	body_t *b2_path_body = body_init(b2_path_rect, 0, DUMMY_COLOR);
+
+	// check if paths collide with any walls
 	size_t n_bodies = scene_bodies(scene);
 	for (size_t i = 0; i < n_bodies; i++) {
 		body_t *body = scene_get_body(scene, i);
 		if (get_type(body) != WALL) {
 			continue;
 		}
-		collision_info_t coll_info = find_collision(path_body, body);
+		collision_info_t coll_info = find_collision(b1_path_body, body);
 		if (coll_info.collided) {
 			return false;
 		}
 	}
-	body_free(path_body);
+	body_free(b1_path_body);
+	body_free(b2_path_body);
 	
 	return true;
+}
+
+/**
+ * Check if bullet shot by p1 right now will hit p2
+*/
+bool should_shoot(body_t *p1, body_t *p2, game_info_t *info) {
+	double bullet_speed = info->bullet_speed;
+	double bullet_radius = info->bullet_radius;
+	double ship_base = info->ship_base;
+	double ship_height = info->ship_height;
+	scene_t *scene = info->scene;
+
+	body_t *bullet = make_bullet(body_get_centroid(p1), body_get_rot_inertia(p1), 
+															 bullet_speed, bullet_radius, 0, ship_height);
+	bool ret = will_collide(bullet, p2, bullet_radius * 2, ship_base, scene);
+	body_free(bullet);
+	return ret;
+}
+
+/**
+ * Check if any bullets in scene will hit ship
+ */
+bool should_dodge(body_t *ship, game_info_t *info) {
+	scene_t *scene = info->scene;
+	size_t n_bodies = scene_bodies(scene);
+	for (size_t i = 0; i < n_bodies; i++) {
+		body_t *body = scene_get_body(scene, i);
+		if (get_type(body) != BULLET) {
+			continue;
+		}
+		if (will_collide(body, ship, info->bullet_radius * 2, info->ship_base, info->scene)) {
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 /**
@@ -124,12 +172,14 @@ void bot_move(Uint8 *key_state, game_info_t *info, body_t *player)  {
 	}
 	
 	// shoot if bullet will hit
-	bool should_shoot = bullet_will_hit(player, opp, info);
-	key_state[shoot_key] = should_shoot;
+	bool press_shoot = should_shoot(player, opp, info);
+	key_state[shoot_key] = press_shoot;
 	
-	// turn with 99% chance otherwise (could use the turn_reduces_angle 
-	// function to "track" player, but AI is already too good)
-	if (!should_shoot) {
-		key_state[turn_key] = rand() % 100;
-	}
+	// if (turn_reduces_angle(player, opp, info->dt)) {
+	// 	key_state[turn_key] = 1;
+	// }
+	// if (should_dodge(player, info)) {
+	// 	bool was_turning = get_last_press(turn_key) > get_last_release(turn_key);
+	// 	key_state[turn_key] = !was_turning;
+	// }
 }
