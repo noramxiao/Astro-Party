@@ -797,8 +797,8 @@ state_t *emscripten_init() {
   srand(time(NULL));
   state_t *state = malloc(sizeof(state_t));
   state->mode = HOME;
-  state->P1_score = 4;
-  state->P2_score = 4;
+  state->P1_score = 0;
+  state->P2_score = 0;
   state->time_of_last_shot[0] = 0;
   state->time_of_last_shot[1] = 0;
   state->bot = false;
