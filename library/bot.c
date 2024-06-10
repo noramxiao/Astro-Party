@@ -16,6 +16,11 @@ const rgb_color_t DUMMY_COLOR = (rgb_color_t) {.r = 0, .g = 0, .b = 0};
 
 /**
  * Calculate the time at which two bodies are closest given current velocities
+ * 
+ * @param b1 first body
+ * @param b2 second body
+ * 
+ * @return time until b1 and b2 are closest to each other
 */
 double get_time_closest(body_t *b1, body_t *b2) {
 	vector_t pos1 = body_get_centroid(b1);
@@ -30,6 +35,14 @@ double get_time_closest(body_t *b1, body_t *b2) {
 
 /**
  * Check if two bodies will collide
+ * 
+ * @param b1 first body
+ * @param b2 second body
+ * @param b1_width width of b1; used to check if b1 collides with wall along its path
+ * @param b2_width width of b2; used to check if b1 collides with wall along its path
+ * @param scene game scene
+ * 
+ * @return true of b1 and b2 will collide before either hit any walls; false otherwise
  */
 bool will_collide(body_t *b1, body_t *b2, double b1_width, double b2_width, scene_t *scene) {
 	double time_closest = get_time_closest(b1, b2);
@@ -86,6 +99,12 @@ bool will_collide(body_t *b1, body_t *b2, double b1_width, double b2_width, scen
 
 /**
  * Check if bullet shot by p1 right now will hit p2 given current velocities
+ * 
+ * @param p1 first player
+ * @param p2 second player
+ * @param info information about game constants
+ * 
+ * @return true if a bullet shot by p1 now will hit p2; false otherwise
 */
 bool should_shoot(body_t *p1, body_t *p2, game_info_t *info) {
 	double bullet_speed = info->bullet_speed;
@@ -103,6 +122,11 @@ bool should_shoot(body_t *p1, body_t *p2, game_info_t *info) {
 
 /**
  * Check if any bullets in scene will hit ship's current position
+ * 
+ * @param ship body of ship
+ * @param info information about game constants and scene
+ * 
+ * @return true if any bullet will hit ship; false otherwise
  */
 bool should_dodge(body_t *ship, game_info_t *info) {
 	scene_t *scene = info->scene;
@@ -122,6 +146,11 @@ bool should_dodge(body_t *ship, game_info_t *info) {
 
 /**
  * Finds the positive modulus between two doubles
+ * 
+ * @param a first double
+ * @param b second double
+ * 
+ * @return (a % b + b) % b
 */
 double pos_fmod(double a, double b) {
 	return fmod(fmod(a, b) + b, b);
@@ -129,10 +158,15 @@ double pos_fmod(double a, double b) {
 
 /** 
  * Calculates clockwise angle difference from v1 to v2
+ * 
+ * @param v1 first vector
+ * @param v2 second vector
+ * 
+ * @return clockwise angle from v1 to v2
  */
 double get_clockwise_angle_diff(vector_t v1, vector_t v2) {
-	double angle1 = pos_fmod(atan(v1.y / v1.x), 2 * M_PI);
-	double angle2 = pos_fmod(atan(v2.y / v2.x), 2 * M_PI);
+	double angle1 = pos_fmod(atan(v1.y / v1.x) + (v1.x > 0 ? 0 : M_PI), 2 * M_PI);
+	double angle2 = pos_fmod(atan(v2.y / v2.x) + (v2.x > 0 ? 0 : M_PI), 2 * M_PI);
 	double angle_diff = pos_fmod(angle2 - angle1, 2 * M_PI);
 	// return 2 pi - angle diff b/c angle_diff is counterclockwise
 	return 2 * M_PI - angle_diff;
@@ -140,6 +174,13 @@ double get_clockwise_angle_diff(vector_t v1, vector_t v2) {
 
 /**
  * Checks if turning p1 reduces angle between p1 and p2
+ * 
+ * @param p1 player 1
+ * @param p2 player 2
+ * @param ship_rot_speed speed that player 1 ship is rotating
+ * @param dt time since last tick (assume next tick is at same interval)
+ * 
+ * @return if rotating p1 this tick will reduce angle between p1 forward direction and radius to p2
 */
 bool turn_reduces_angle(body_t *p1, body_t *p2, double ship_rot_speed, double dt) {
 	// find radius from p1 to p2 during next tick
