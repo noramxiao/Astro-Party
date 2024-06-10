@@ -865,7 +865,10 @@ bool emscripten_main(state_t *state) {
           .bullet_radius = BULLET_RADIUS,
           .ship_base = SHIP_BASE,
           .ship_height = SHIP_HEIGHT,
+          .ship_rot_speed = PLAYER_ROT_SPEED, 
+          .double_tap_thresh = DOUBLE_TAP_THRESH,
           .scene = state->scene,
+          .dt = state->dt
         };
         bot_move(key_state, info, state->player2);
         free(info);

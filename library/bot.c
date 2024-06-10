@@ -22,12 +22,10 @@ double get_time_closest(body_t *b1, body_t *b2) {
 	vector_t v1 = body_get_velocity(b1);
 	vector_t pos2 = body_get_centroid(b2);
 	vector_t v2 = body_get_velocity(b2);
-
-	// find time of minimum distance between bullet and p2
 	vector_t pos_diff = vec_subtract(pos2, pos1);
 	vector_t velo_diff = vec_subtract(v2, v1);
 	double time_closest = -vec_dot(velo_diff, pos_diff) / vec_dot(velo_diff, velo_diff);
-	return time_closest;
+	return fmax(0, time_closest);
 }
 
 /**
@@ -50,12 +48,11 @@ bool will_collide(body_t *b1, body_t *b2, double b1_width, double b2_width, scen
 
 	// check for collision between bullet and p2 at time_closest
 	collision_info_t coll_info = find_collision(b1, b2);
+	body_set_centroid(b1, b1_centroid);
+	body_set_centroid(b2, b2_centroid);
 	if (!coll_info.collided) {
 		return false;
 	}
-
-	body_set_centroid(b1, b1_centroid);
-	body_set_centroid(b2, b2_centroid);
 
 	// create bodies for the b1 and b2 paths
 	vector_t b1_path_centroid = vec_add(b1_centroid, vec_multiply(0.5, b1_path));
@@ -76,6 +73,8 @@ bool will_collide(body_t *b1, body_t *b2, double b1_width, double b2_width, scen
 		}
 		collision_info_t coll_info = find_collision(b1_path_body, body);
 		if (coll_info.collided) {
+			body_free(b1_path_body);
+			body_free(b2_path_body);
 			return false;
 		}
 	}
@@ -86,7 +85,7 @@ bool will_collide(body_t *b1, body_t *b2, double b1_width, double b2_width, scen
 }
 
 /**
- * Check if bullet shot by p1 right now will hit p2
+ * Check if bullet shot by p1 right now will hit p2 given current velocities
 */
 bool should_shoot(body_t *p1, body_t *p2, game_info_t *info) {
 	double bullet_speed = info->bullet_speed;
@@ -95,7 +94,7 @@ bool should_shoot(body_t *p1, body_t *p2, game_info_t *info) {
 	double ship_height = info->ship_height;
 	scene_t *scene = info->scene;
 
-	body_t *bullet = make_bullet(body_get_centroid(p1), body_get_rot_inertia(p1), 
+	body_t *bullet = make_bullet(body_get_centroid(p1), body_get_rotation(p1), 
 															 bullet_speed, bullet_radius, 0, ship_height);
 	bool ret = will_collide(bullet, p2, bullet_radius * 2, ship_base, scene);
 	body_free(bullet);
@@ -103,7 +102,7 @@ bool should_shoot(body_t *p1, body_t *p2, game_info_t *info) {
 }
 
 /**
- * Check if any bullets in scene will hit ship
+ * Check if any bullets in scene will hit ship's current position
  */
 bool should_dodge(body_t *ship, game_info_t *info) {
 	scene_t *scene = info->scene;
@@ -128,29 +127,35 @@ double pos_fmod(double a, double b) {
 	return fmod(fmod(a, b) + b, b);
 }
 
+/** 
+ * Calculates clockwise angle difference from v1 to v2
+ */
+double get_clockwise_angle_diff(vector_t v1, vector_t v2) {
+	double angle1 = pos_fmod(atan(v1.y / v1.x), 2 * M_PI);
+	double angle2 = pos_fmod(atan(v2.y / v2.x), 2 * M_PI);
+	double angle_diff = pos_fmod(angle2 - angle1, 2 * M_PI);
+	// return 2 pi - angle diff b/c angle_diff is counterclockwise
+	return 2 * M_PI - angle_diff;
+}
+
 /**
- * Checks if turning reduces angle between p1 and p2
+ * Checks if turning p1 reduces angle between p1 and p2
 */
-bool turn_reduces_angle(body_t *p1, body_t *p2, double dt) {
-	// current angle between forward direction of player (p1) and radius to opp (p2)
-	double p1_angle = body_get_rotation(p1);
-	p1_angle = pos_fmod(p1_angle, 2 * M_PI);
-	vector_t radius = vec_subtract(body_get_centroid(p2), body_get_centroid(p1));
-	double rad_angle = atan(radius.y / radius.x) - M_PI / 2;
-	rad_angle = pos_fmod(rad_angle, 2 * M_PI);
-	double angle_diff = rad_angle - p1_angle;
-	angle_diff = pos_fmod(angle_diff, 2 * M_PI);
-	
-	// new angle between forward direction of p1 and radius to p2
-	double new_p1_angle = p1_angle + body_get_rot_speed(p1) * dt;
-	new_p1_angle = pos_fmod(p1_angle, 2 * M_PI);
+bool turn_reduces_angle(body_t *p1, body_t *p2, double ship_rot_speed, double dt) {
+	// find radius from p1 to p2 during next tick
 	vector_t new_p1_centroid = vec_add(body_get_centroid(p1), vec_multiply(dt, body_get_velocity(p1)));
 	vector_t new_p2_centroid = vec_add(body_get_centroid(p2), vec_multiply(dt, body_get_velocity(p2)));
 	vector_t new_radius = vec_subtract(new_p1_centroid, new_p2_centroid);
-	double new_rad_angle = atan(new_radius.y / new_radius.x) - M_PI / 2;
-	new_rad_angle = pos_fmod(new_rad_angle, 2 * M_PI);
-	double new_angle_diff = new_rad_angle - new_p1_angle;
-	new_angle_diff = pos_fmod(new_angle_diff, 2 * M_PI);
+
+	// current angle between forward direction of player (p1) and radius to opp (p2)
+	double p1_angle = body_get_rotation(p1);
+	vector_t p1_dir = vec_make(1, p1_angle);
+	double angle_diff = get_clockwise_angle_diff(p1_dir, new_radius);
+	
+	// new angle between forward direction of p1 and radius to p2
+	double new_p1_angle = p1_angle + ship_rot_speed * dt;
+	vector_t new_p1_dir = vec_make(1, new_p1_angle);
+	double new_angle_diff = get_clockwise_angle_diff(new_p1_dir, new_radius);
 	
 	return new_angle_diff < angle_diff;
 }
@@ -175,11 +180,13 @@ void bot_move(Uint8 *key_state, game_info_t *info, body_t *player)  {
 	bool press_shoot = should_shoot(player, opp, info);
 	key_state[shoot_key] = press_shoot;
 	
-	// if (turn_reduces_angle(player, opp, info->dt)) {
-	// 	key_state[turn_key] = 1;
-	// }
-	// if (should_dodge(player, info)) {
-	// 	bool was_turning = get_last_press(turn_key) > get_last_release(turn_key);
-	// 	key_state[turn_key] = !was_turning;
-	// }
+	if (turn_reduces_angle(player, opp, info->ship_rot_speed, info->dt)) {
+		key_state[turn_key] = true;
+	}
+
+	// boost to dodge if needed
+	if (should_dodge(player, info)) {
+		bool turning = get_last_press(turn_key) > get_last_release(turn_key);
+		key_state[turn_key] = !turning;
+	}
 }
