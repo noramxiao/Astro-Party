@@ -10,6 +10,8 @@ typedef struct game_info {
 	double bullet_radius;
 	double ship_base;
 	double ship_height;
+	double ship_rot_speed;
+	double double_tap_thresh;
 	scene_t *scene;
 	double dt;
 } game_info_t;
