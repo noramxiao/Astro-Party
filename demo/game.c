@@ -33,7 +33,6 @@ const double INIT_SHIP_ANGLES[] = {
 };
 const double PLAYER_ROT_SPEED = -M_PI;
 const double PLAYER_ROT_ACCEL = 3;
-// const double PLAYER_ROT_SPEED = -6 * M_PI;
 const double BOOST_VELOCITY = 400;
 const double BOOST_ANGLE = -M_PI / 3;
 const double BOOST_ROT_SPEED = -3 * M_PI;
@@ -701,9 +700,9 @@ void render_bg_zoom(state_t *state, vector_t cam_pos, vector_t cam_size) {
 }
 
 /** 
- * Renders score as a progress bar at the top of the screen.
+ * Renders score as a progress bar at the top of the screen. Game page only.
 */
-void render_scores(state_t *state) {
+void game_render_scores(state_t *state) {
   // player 1
   size_t p1 = state->P1_score;
   rgb_color_t p1_color = PLAYER_COLORS[0];
@@ -728,7 +727,7 @@ void render_scores(state_t *state) {
 }
 
 /**
- * Displays which map and what opponent type the user has selected, home page only
+ * Displays which map and what opponent type the user has selected. Home page only.
 */
 void home_render_selected(state_t *state) {
   // Map selection
@@ -837,23 +836,23 @@ bool emscripten_main(state_t *state) {
       break;
     }
     case GAME: {
-      
       scene_tick(state->scene, dt);
 
+      // game over
       if (state->P1_score >= WIN_SCORE || state->P2_score >= WIN_SCORE) { 
         state->mode = POST_GAME;
         post_game_init(state);
       }
 
       sdl_clear();
-      //render_assets(state->game_assets);
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), 
                                         body_get_centroid(state->player2)));
       render_bg_track(state, cam_center, calc_cam_size(state));
       sdl_render_scene_cam(state->scene, NULL, cam_center, calc_cam_size(state));
-      render_scores(state);
+      game_render_scores(state);
       sdl_show();
 
+      // bot update
       Uint8 *key_state = sdl_get_keystate();
       if (state->bot) {
         game_info_t *info = malloc(sizeof(game_info_t));
@@ -872,7 +871,7 @@ bool emscripten_main(state_t *state) {
       }
       
       state->dt = dt;
-      state->key_state = key_state;
+      state->key_state = sdl_get_keystate();
       sdl_is_done(state);
       break;
     }
