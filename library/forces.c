@@ -332,16 +332,6 @@ void contact_collision_handler(body_t *body1, body_t *body2, vector_t axis,
   double f2 = vec_dot(axis, body_get_force(body2));
 
   double a1 = f1/m1;
-  double a2 = f2/m2;
-
-
-
-  // double d = dir/fabs(dir);
-
-  // if (a1 - a2 > 0){
-  //   return;
-  // }
-
   double acc = 0;
   vector_t normal_force;
   if (m1 == INFINITY){
