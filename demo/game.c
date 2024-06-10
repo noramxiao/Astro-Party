@@ -449,7 +449,6 @@ void handle_turn(body_t *ship, double time_held, double dt) {
   double da = rot_speed * dt;
   double curr_angle = body_get_rotation(ship);
   body_set_rotation(ship, curr_angle + da);
-  // body_add_rot_impulse(ship, body_get_rot_inertia(ship) * PLAYER_ROT_SPEED);
 }
 
 void handle_boost(body_t *ship, double time_since_turn_pressed, 

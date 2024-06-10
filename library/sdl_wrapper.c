@@ -117,10 +117,9 @@ void sdl_init(vector_t min, vector_t max) {
                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                             SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048))
-  {
-  fprintf(stderr, "Unable to open audio: %s.\n", Mix_GetError());
-  exit(1);
+  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048)) {
+    fprintf(stderr, "Unable to open audio: %s.\n", Mix_GetError());
+    exit(1);
   }
   TTF_Init();
 }
