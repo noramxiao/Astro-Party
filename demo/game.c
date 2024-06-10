@@ -18,14 +18,33 @@
 const vector_t MIN = {0, 0};
 const vector_t MAX = {1000, 500};
 
+// game constants
 const size_t INITIAL_GAME_CAPACITY = 5;
 const size_t WIN_SCORE = 5;
-const size_t N_PLAYERS = 2;
 const size_t SCORE_HEIGHT = 30; // height of entire score bar
 const char *FONT_PATH = "assets/Roboto.ttf";
 const char *GAME_OVER_MSG = "Game over! Winner is: Player ";
+const char *PLAYER_COLOR_NAMES[] = {"Red", "Blue"};
+const char *OPP_SELECTION_MSGS[] = {"Player vs. Player", "Play against AI"};
+const SDL_Rect MAP_SELECTION_BOX = (SDL_Rect){572, 262, 10, 10};
+const SDL_Rect OPP_SELECTION_BOX = (SDL_Rect){530, 325, 10, 10};
 const rgb_color_t BLACK = (rgb_color_t){.r = 1, .g = 1, .b = 1};
+const rgb_color_t WHITE = (rgb_color_t){1, 1, 1};
 
+// sound constants
+const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
+const char *BOOST_SOUND_PATH = "assets/sounds/boost.wav";
+const char *BACKGROUND_TRACK = "assets/music/outro.ogg";
+
+// environment constants
+const double WALL_DIM = 1;
+const double ASTEROID_MASS_DENSITY = 0.1;
+const double ELASTICITY = 1;
+
+// ship constants
+const double SHIP_MASS = 10;
+const double SHIP_BASE = 20;
+const double SHIP_HEIGHT = 30;
 const double INIT_SHIP_SPEED = 0;
 const double INIT_SHIP_ANGLES[] = {
   5 * M_PI / 4,
@@ -37,43 +56,22 @@ const double BOOST_VELOCITY = 400;
 const double BOOST_ANGLE = -M_PI / 3;
 const double BOOST_ROT_SPEED = -3 * M_PI;
 const double DOUBLE_TAP_THRESH = 0.2 * CLOCKS_PER_SEC;
-
-const double RELOAD_TIME = 0.5;
-
-// sound constants
-const char *SHOOT_SOUND_PATH = "assets/sounds/shoot.wav";
-const char *BOOST_SOUND_PATH = "assets/sounds/boost.wav";
-const char *BACKGROUND_TRACK = "assets/music/outro.ogg";
-
-const double BULLET_SPEED = 500;
-
-const double WALL_DIM = 1;
-
-const double ELASTICITY = 1;
 const double THRUST_POWER = 3000;
 const double DRAG_COEF = 30;
 const double ROT_DRAG_FACTOR = 7;
-
-const rgb_color_t WHITE = (rgb_color_t){1, 1, 1};
-
-// ship constants
-const double SHIP_MASS = 10;
-const double SHIP_BASE = 20;
-const double SHIP_HEIGHT = 30;
-
-// pilot constants
-const double PILOT_MASS = 5;
-const vector_t PILOT_RECT_DIMS = (vector_t) {.x = 10, .y = 20};
-const double PILOT_CIRC_RAD = 15;
-
-const double BLACKHOLE_CIRC_RAD = 10;
-
-// asteroid constants
-const double ASTEROID_MASS_DENSITY = 0.1;
+const double RELOAD_TIME = 0.5;
 
 // bullet constants
 const double BULLET_RADIUS = 5;
 const double BULLET_MASS = 5;
+const double BULLET_SPEED = 500;
+
+double rand_double() { return (double)rand() / RAND_MAX; }
+void toggle_play(state_t *state);
+void toggle_left_map_arrow(state_t *state);
+void toggle_right_map_arrow(state_t *state);
+void toggle_bot_arrow(state_t *state);
+void add_force_creators(state_t *state);
 
 enum mode {
   HOME,
@@ -143,25 +141,22 @@ typedef struct image_info {
   const char *text;
 } image_info_t;
 
-void toggle_play(state_t *state);
-void toggle_left_map_arrow(state_t *state);
-void toggle_right_map_arrow(state_t *state);
-void toggle_bot_arrow(state_t *state);
-void add_force_creators(state_t *state);
-
 image_info_t home_images[] = {
   { .image_path = "assets/space.jpg",
     .image_box = (SDL_Rect){MIN.x, MIN.y, MAX.x, MAX.y}},
   { .image_path = "assets/title.png",
-    .image_box = (SDL_Rect){MAX.x / 4, 60, MAX.x / 2, MAX.y / 3}},
+    .image_box = (SDL_Rect){MAX.x / 4, 20, MAX.x / 2, MAX.y / 3}},
   { .image_path = "assets/box.jpeg",
-    .image_box = (SDL_Rect){400, 250, 200, 50},
+    .image_box = (SDL_Rect){525, 250, 200, 50},
     .font_path = "assets/Roboto.ttf",
-    .text_box = (SDL_Rect){410, 260, 200, 75},
+    .text_box = (SDL_Rect){530, 260, 200, 75},
     .text_color = BLACK,
     .text = "Map "},
   { .image_path = "assets/box.jpeg",
-    .image_box = (SDL_Rect){400, 315, 200, 50}}
+    .image_box = (SDL_Rect){525, 315, 200, 50}},
+  { .image_path = "assets/instructions.png",
+    .image_box = (SDL_Rect){100, 185, 350, 315}
+  }
 };
 
 image_info_t post_game_images[] = {
@@ -169,6 +164,24 @@ image_info_t post_game_images[] = {
     .image_box = (SDL_Rect){MIN.x, MIN.y, MAX.x, MAX.y}},
   { .image_path = "assets/box.jpeg",
     .image_box = (SDL_Rect){300, 200, 400, 50}}
+};
+
+button_info_t button_templates[] = {
+    {.image_path = "assets/play_button.png",
+     .image_box = (SDL_Rect){520, 390, 200, 75},
+     .handler = (void *)toggle_play},
+    {.image_path = "assets/left_arrow.png",
+     .image_box = (SDL_Rect){445, 245, 75, 75},
+     .handler = (void*)toggle_left_map_arrow},
+    {.image_path = "assets/right_arrow.png",
+     .image_box = (SDL_Rect){725, 245, 75, 75},
+     .handler = (void*)toggle_right_map_arrow},
+    {.image_path = "assets/left_arrow.png",
+     .image_box = (SDL_Rect){445, 310, 75, 75},
+     .handler = (void*)toggle_bot_arrow},
+    {.image_path = "assets/right_arrow.png",
+     .image_box = (SDL_Rect){725, 310, 75, 75},
+     .handler = (void*)toggle_bot_arrow}
 };
 
 map_t maps[] = {
@@ -246,33 +259,6 @@ map_t maps[] = {
   }
 };
 
-double rand_double() { return (double)rand() / RAND_MAX; }
-
-button_info_t button_templates[] = {
-    {.image_path = "assets/play_button.png",
-     .image_box = (SDL_Rect){395, 390, 200, 75},
-     .handler = (void *)toggle_play},
-    {.image_path = "assets/left_arrow.png",
-     .image_box = (SDL_Rect){320, 245, 75, 75},
-     .handler = (void*)toggle_left_map_arrow},
-    {.image_path = "assets/right_arrow.png",
-     .image_box = (SDL_Rect){600, 245, 75, 75},
-     .handler = (void*)toggle_right_map_arrow},
-    {.image_path = "assets/left_arrow.png",
-     .image_box = (SDL_Rect){320, 310, 75, 75},
-     .handler = (void*)toggle_bot_arrow},
-    {.image_path = "assets/right_arrow.png",
-     .image_box = (SDL_Rect){600, 310, 75, 75},
-     .handler = (void*)toggle_bot_arrow}
-};
-
-void add_ship(state_t *state, vector_t pos, size_t team) {
-  vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
-  body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team], 
-                                SHIP_BASE, SHIP_HEIGHT, SHIP_MASS);
-  scene_add_body(state->scene, ship_body);
-}
-
 void reset_game(state_t *state) {
   size_t n_bodies = scene_bodies(state->scene);
 
@@ -305,6 +291,124 @@ void score_hit(body_t *body1, body_t *body2, vector_t axis, void *aux,
     state->P2_score++;
   }
   reset_game(state);
+}
+
+
+void add_ship(state_t *state, vector_t pos, size_t team) {
+  vector_t velocity = vec_make(INIT_SHIP_SPEED, INIT_SHIP_ANGLES[team]);
+  body_t *ship_body = make_ship(pos, team, velocity, INIT_SHIP_ANGLES[team], 
+                                SHIP_BASE, SHIP_HEIGHT, SHIP_MASS);
+  scene_add_body(state->scene, ship_body);
+}
+
+void add_bounds(state_t *state) {
+  list_t *wall1_shape =
+      make_rectangle((vector_t){MAX.x, MAX.y / 2}, WALL_DIM, MAX.y);
+  body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, WHITE,
+                                      entity_info_init(WALL, 100), free);
+  list_t *wall2_shape =
+      make_rectangle((vector_t){0, MAX.y / 2}, WALL_DIM, MAX.y);
+  body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, WHITE,
+                                      entity_info_init(WALL, 100), free);
+  list_t *ceiling_shape =
+      make_rectangle((vector_t){MAX.x / 2, MAX.y}, MAX.x, WALL_DIM);
+  body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, WHITE,
+                                        entity_info_init(WALL, 100), free);
+  list_t *ground_shape =
+      make_rectangle((vector_t){MAX.x / 2, 0}, MAX.x, WALL_DIM);
+  body_t *ground = body_init_with_info(ground_shape, INFINITY, WHITE,
+                                       entity_info_init(WALL, 100), free);
+  scene_add_body(state->scene, wall1);
+  scene_add_body(state->scene, wall2);
+  scene_add_body(state->scene, ceiling);
+  scene_add_body(state->scene, ground);
+}
+
+void add_obstacles(state_t *state){
+  add_bounds(state);
+  for(size_t i = 0; i < state->map.num_blocks; i++){
+    list_t *block_shape = make_rectangle(state->map.block_locations[i], state->map.block_sizes[i].x, state->map.block_sizes[i].y);
+    body_t *block = body_init_with_info(block_shape, INFINITY, WHITE,
+                                      entity_info_init(WALL, 100), free);
+    scene_add_body(state->scene, block);
+  }
+}
+
+void add_asteroids(state_t *state){
+  for(size_t i = 0; i < state->map.num_asteroids; i++){
+    bool pos_found = false;
+    vector_t pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
+    body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, VEC_ZERO, 
+                                     ASTEROID_MASS_DENSITY);
+    while(!pos_found){
+      pos_found = true;
+      pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
+      body_set_centroid(asteroid, pos);
+      size_t n_bodies = scene_bodies(state->scene);
+      
+      for (size_t i = 0; i < n_bodies; i++) {
+        body_t *body = scene_get_body(state->scene, i);
+        if(find_collision(body, asteroid).collided){
+          pos_found = false;
+          break;
+        }
+      }
+    }
+    scene_add_body(state->scene, asteroid);
+  }
+}
+
+/**
+ * Initializes map elements such as ships, obstacles, asteroids, and background images
+ * and adds them to the scene and state.
+ * 
+ * @param state the state
+ */
+void map_init(state_t *state){
+  map_t map = maps[state->map_selected];
+  state->map = map;
+
+  add_ship(state, map.start_pos[0], 0);
+  add_ship(state, map.start_pos[1], 1);
+
+  add_obstacles(state);
+  add_asteroids(state);
+
+  if (map.backdrop_path != NULL) {
+    SDL_Rect background_bbox = (SDL_Rect){
+      .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
+    asset_t *background_asset =
+      asset_make_image(map.backdrop_path, background_bbox);
+    list_add(state->game_assets, background_asset);
+  }
+  
+  for(size_t i = 0; i < map.num_bg; i++){
+    SDL_Rect background_bbox = (SDL_Rect){
+      .x = map.bg_pos[i].x, .y = map.bg_pos[i].y, .w = map.bg_sizes[i].x, .h = map.bg_sizes[i].y};
+    asset_t *background_asset =
+      asset_make_image(map.bg_paths[i], background_bbox);
+    list_add(state->game_assets, background_asset);
+  }
+}
+
+void handle_turn(body_t *ship, double time_held, double dt) {
+  // increase rotation speed at log rate
+  double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * PLAYER_ROT_ACCEL + 1));
+  double da = rot_speed * dt;
+  double curr_angle = body_get_rotation(ship);
+  body_set_rotation(ship, curr_angle + da);
+}
+
+void handle_boost(body_t *ship, double time_since_turn_pressed, 
+                  double time_since_turn_released, Mix_Chunk *boost_sound) {
+  if (time_since_turn_pressed < time_since_turn_released && 
+      time_since_turn_released < DOUBLE_TAP_THRESH) {
+    double angle = body_get_rotation(ship);
+    vector_t boost_impulse = vec_make(body_get_mass(ship) * BOOST_VELOCITY, angle + BOOST_ANGLE);
+    body_add_impulse(ship, boost_impulse);
+    body_add_rot_impulse(ship, body_get_rot_inertia(ship) * BOOST_ROT_SPEED);
+    sdl_play_sound(boost_sound);
+  }
 }
 
 void handle_shoot(state_t *state, body_t *ship) {
@@ -348,118 +452,6 @@ void handle_shoot(state_t *state, body_t *ship) {
     state->time_of_last_shot[0] = now;
   } else {
     state->time_of_last_shot[1] = now;
-  }
-}
-
-void add_bounds(state_t *state) {
-  list_t *wall1_shape =
-      make_rectangle((vector_t){MAX.x, MAX.y / 2}, WALL_DIM, MAX.y);
-  body_t *wall1 = body_init_with_info(wall1_shape, INFINITY, WHITE,
-                                      entity_info_init(WALL, 100), free);
-  list_t *wall2_shape =
-      make_rectangle((vector_t){0, MAX.y / 2}, WALL_DIM, MAX.y);
-  body_t *wall2 = body_init_with_info(wall2_shape, INFINITY, WHITE,
-                                      entity_info_init(WALL, 100), free);
-  list_t *ceiling_shape =
-      make_rectangle((vector_t){MAX.x / 2, MAX.y}, MAX.x, WALL_DIM);
-  body_t *ceiling = body_init_with_info(ceiling_shape, INFINITY, WHITE,
-                                        entity_info_init(WALL, 100), free);
-  list_t *ground_shape =
-      make_rectangle((vector_t){MAX.x / 2, 0}, MAX.x, WALL_DIM);
-  body_t *ground = body_init_with_info(ground_shape, INFINITY, WHITE,
-                                       entity_info_init(WALL, 100), free);
-  scene_add_body(state->scene, wall1);
-  scene_add_body(state->scene, wall2);
-  scene_add_body(state->scene, ceiling);
-  scene_add_body(state->scene, ground);
-}
-
-/** adds ships and initializes the map
- *
- * @param state the state
- * @param map the map
- */    
-
-void add_obstacles(state_t *state){
-  add_bounds(state);
-  for(size_t i = 0; i < state->map.num_blocks; i++){
-    list_t *block_shape = make_rectangle(state->map.block_locations[i], state->map.block_sizes[i].x, state->map.block_sizes[i].y);
-    body_t *block = body_init_with_info(block_shape, INFINITY, WHITE,
-                                      entity_info_init(WALL, 100), free);
-    scene_add_body(state->scene, block);
-  }
-}
-
-void add_asteroids(state_t *state){
-  for(size_t i = 0; i < state->map.num_asteroids; i++){
-    bool pos_found = false;
-    vector_t pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
-    body_t *asteroid = make_asteroid(pos, 10 + rand_double() * 30, VEC_ZERO, 
-                                     ASTEROID_MASS_DENSITY);
-    while(!pos_found){
-      pos_found = true;
-      pos = (vector_t) {rand_double()*MAX.x, rand_double()*MAX.y};
-      body_set_centroid(asteroid, pos);
-      size_t n_bodies = scene_bodies(state->scene);
-      
-      for (size_t i = 0; i < n_bodies; i++) {
-        body_t *body = scene_get_body(state->scene, i);
-        if(find_collision(body, asteroid).collided){
-          pos_found = false;
-          break;
-        }
-      }
-    }
-    scene_add_body(state->scene, asteroid);
-  }
-}
-
-void init_map(state_t *state){
-  map_t map = maps[state->map_selected];
-  state->map = map;
-
-  add_ship(state, map.start_pos[0], 0);
-  add_ship(state, map.start_pos[1], 1);
-
-  add_obstacles(state);
-  add_asteroids(state);
-
-  if (map.backdrop_path != NULL) {
-    SDL_Rect background_bbox = (SDL_Rect){
-      .x = MIN.x, .y = MIN.y, .w = MAX.x - MIN.x, .h = MAX.y - MIN.y};
-    asset_t *background_asset =
-      asset_make_image(map.backdrop_path, background_bbox);
-    list_add(state->game_assets, background_asset);
-  }
-  
-  for(size_t i = 0; i < map.num_bg; i++){
-    SDL_Rect background_bbox = (SDL_Rect){
-      .x = map.bg_pos[i].x, .y = map.bg_pos[i].y, .w = map.bg_sizes[i].x, .h = map.bg_sizes[i].y};
-    asset_t *background_asset =
-      asset_make_image(map.bg_paths[i], background_bbox);
-    list_add(state->game_assets, background_asset);
-  }
-
-}
-
-void handle_turn(body_t *ship, double time_held, double dt) {
-  // increase rotation speed at log rate
-  double rot_speed = PLAYER_ROT_SPEED * fmin(2, 1 + log(time_held * PLAYER_ROT_ACCEL + 1));
-  double da = rot_speed * dt;
-  double curr_angle = body_get_rotation(ship);
-  body_set_rotation(ship, curr_angle + da);
-  // body_add_rot_impulse(ship, body_get_rot_inertia(ship) * PLAYER_ROT_SPEED);
-}
-
-void handle_boost(body_t *ship, double time_since_turn_pressed, 
-                  double time_since_turn_released, Mix_Chunk *boost_sound) {
-  if (time_since_turn_pressed < time_since_turn_released && 
-      time_since_turn_released < DOUBLE_TAP_THRESH) {
-    double angle = body_get_rotation(ship);
-    vector_t boost_impulse = vec_make(body_get_mass(ship) * BOOST_VELOCITY, angle + BOOST_ANGLE);
-    body_add_impulse(ship, boost_impulse);
-    body_add_rot_impulse(ship, body_get_rot_inertia(ship) * BOOST_ROT_SPEED);
-    sdl_play_sound(boost_sound);
   }
 }
 
@@ -515,16 +507,27 @@ void on_key(state_t *state) {
   state->key_state = NULL;
 }
 
+/**
+ * Called when the play button is clicked. Initializes the game page based on home page
+ * selections.
+ * 
+ * @param state the state
+ */
 void toggle_play(state_t *state) {
   state->mode = GAME;
-  init_map(state);
+  map_init(state);
   state->player1 = scene_get_body(state->scene, 0);
   state->player2 = scene_get_body(state->scene, 1);
 
   add_force_creators(state);
-  sdl_play_music(state->backing_track);
 }
 
+/**
+ * Called when left arrow button is clicked to toggle between map options. Updates map
+ * selection in the state by decrementing the map option.
+ * 
+ * @param state the state
+ */
 void toggle_left_map_arrow(state_t *state) {
   if (state->map_selected == 0) {
     state->map_selected = 3;
@@ -533,15 +536,34 @@ void toggle_left_map_arrow(state_t *state) {
   state->map_selected--;
 }
 
+/**
+ * Called when left arrow button is clicked to toggle between map options. Updates map
+ * selection in the state by incrementing the map option.
+ * 
+ * @param state the state
+ */
 void toggle_right_map_arrow(state_t *state) {
   state->map_selected++;
   state->map_selected %= 4;
 }
 
+/**
+ * Called when toggling between opponent options in the home page. Updates opponent
+ * selection in the state.
+ * 
+ * @param state the state
+ */
 void toggle_bot_arrow(state_t *state) {
   state->bot = !state->bot;
 }
 
+/**
+ * on_click helper function. Passes coords to button assets.
+ * 
+ * @param state the state
+ * @param x x coord of the click
+ * @param y y coord of the click
+ */
 void handle_buttons(state_t *state, double x, double y) {
   size_t n_assets = list_size(state->home_assets);
   for (size_t i = 0; i < n_assets; i++) {
@@ -552,17 +574,16 @@ void handle_buttons(state_t *state, double x, double y) {
   }
 }
 
+/**
+ * Called when the user clicks the screen. Passes x, y coordinates to be handled.
+ * 
+ * @param state the state
+ * @param x x coord of the click
+ * @param y y coord of the click
+ */
 void on_click(state_t *state, double x, double y) {
-  switch (state->mode) {
-    case HOME:
-      handle_buttons(state, x, y);
-      break;
-    case GAME:
-      break;
-    case POST_GAME:
-      break;
-    default:
-      break;
+  if (state->mode == HOME) { // mouse input only needed in home page
+    handle_buttons(state, x, y);
   }
 }
 
@@ -595,6 +616,7 @@ asset_t *create_button_from_info(state_t *state, button_info_t info) {
  *
  * @param list list to add the image asset to
  * @param info the image info struct used to initialize the image
+ * @param info_size the size of the array of image info's
  */
 void add_image_from_info(list_t *list, image_info_t info[], size_t info_size) {
   for (size_t i = 0; i < info_size; i++) {
@@ -615,6 +637,8 @@ void add_image_from_info(list_t *list, image_info_t info[], size_t info_size) {
 
 /**
  * Initializes and stores the button assets in the state.
+ * 
+ * @param state the state
  */
 void create_buttons(state_t *state) {
   size_t n_buttons = sizeof(button_templates) / sizeof(button_templates[0]);
@@ -625,6 +649,11 @@ void create_buttons(state_t *state) {
   }
 }
 
+/**
+ * Initializes images and buttons in the home page and adds them to the state.
+ * 
+ * @param state the state
+ */
 void home_init(state_t *state) {
   size_t size = sizeof(home_images) / sizeof(home_images[0]);
   
@@ -666,6 +695,11 @@ void add_force_creators(state_t *state) {
   }
 }
 
+/**
+ * Renders a list of assets to the screen.
+ * 
+ * @param assets list_t of assets to be rendered.
+ */
 void render_assets(list_t *assets) {
   size_t n_assets = list_size(assets);
   for (size_t i = 0; i < n_assets; i++) {
@@ -701,6 +735,8 @@ void render_bg_zoom(state_t *state, vector_t cam_pos, vector_t cam_size) {
 
 /** 
  * Renders score as a progress bar at the top of the screen. Game page only.
+ * 
+ * @param state the state
 */
 void game_render_scores(state_t *state) {
   // player 1
@@ -728,10 +764,12 @@ void game_render_scores(state_t *state) {
 
 /**
  * Displays which map and what opponent type the user has selected. Home page only.
+ * 
+ * @param state the state
 */
 void home_render_selected(state_t *state) {
   // Map selection
-  SDL_Rect map_box = (SDL_Rect){452, 262, 10, 10};
+  SDL_Rect map_box = MAP_SELECTION_BOX;
   char *map_selected = " ";
 
   switch (state->map_selected) {
@@ -752,30 +790,44 @@ void home_render_selected(state_t *state) {
   asset_render(map_text);
 
   // Opponent selection
-  SDL_Rect opp_box = (SDL_Rect){410, 325, 10, 10};
+  SDL_Rect opp_box = OPP_SELECTION_BOX;
   char *opp_selected = " ";
   if (state->bot) {
-    opp_selected = "Play against AI";
+    opp_selected = strdup(OPP_SELECTION_MSGS[1]);
+    assert(opp_selected);
   } else {
-    opp_selected = "Player vs. Player";
+    opp_selected = strdup(OPP_SELECTION_MSGS[0]);
+    assert(opp_selected);
   }
   asset_t *opp_text = asset_make_text(FONT_PATH, opp_box, opp_selected, WHITE);
   asset_render(opp_text);
 }
 
+/**
+ * Initializes images and buttons in the post game page and adds them to the state.
+ * 
+ * @param state the state
+ */
 void post_game_init(state_t *state) {
   size_t size = sizeof(post_game_images) / sizeof(post_game_images[0]);
   add_image_from_info(state->post_game_assets, post_game_images, size);
 
   char *msg = strdup(GAME_OVER_MSG);
+  assert(msg);
+  char *color = " ";
   ssize_t winner = state->P1_score - state->P2_score; 
   if (winner > 0) {
-    msg = strcat(msg, "Red");
+    color = strdup(PLAYER_COLOR_NAMES[0]);
+    assert(color);
+    msg = strcat(msg, color);
   } else {
-    msg = strcat(msg, "Blue");
+    color = strdup(PLAYER_COLOR_NAMES[1]);
+    assert(color);
+    msg = strcat(msg, color);
   }
 
-  SDL_Rect box = (SDL_Rect){315, 215, MAX.x / 4, MAX.y / 4};
+  SDL_Rect box = (SDL_Rect){post_game_images[1].image_box.x + 15, 
+                            post_game_images[1].image_box.y + 15, MAX.x / 4, MAX.y / 4};
   asset_t *msg_asset = asset_make_text(FONT_PATH, box, msg, WHITE);
 
   list_add(state->post_game_assets, msg_asset);
@@ -817,6 +869,7 @@ state_t *emscripten_init() {
   state->backing_track = sdl_load_music(BACKGROUND_TRACK);
   
   home_init(state);
+  sdl_play_music(state->backing_track);
 
   sdl_on_key((key_handler_t)on_key);
   sdl_on_click((click_handler_t)on_click);
@@ -844,6 +897,7 @@ bool emscripten_main(state_t *state) {
         post_game_init(state);
       }
 
+      // render scene with camera
       sdl_clear();
       vector_t cam_center = vec_multiply(0.5, vec_add(body_get_centroid(state->player1), 
                                         body_get_centroid(state->player2)));
@@ -853,7 +907,7 @@ bool emscripten_main(state_t *state) {
       sdl_show();
 
       // bot update
-      Uint8 *key_state = sdl_get_keystate();
+      state->key_state = sdl_get_keystate();
       if (state->bot) {
         game_info_t *info = malloc(sizeof(game_info_t));
         assert(info);
@@ -869,12 +923,11 @@ bool emscripten_main(state_t *state) {
           .scene = state->scene,
           .dt = state->dt
         };
-        bot_move(key_state, info, state->player2);
+        bot_move(state->key_state, info, state->player2);
         free(info);
       }
       
       state->dt = dt;
-      state->key_state = sdl_get_keystate();
       sdl_is_done(state);
       break;
     }
