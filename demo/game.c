@@ -142,11 +142,11 @@ typedef struct image_info {
 } image_info_t;
 
 image_info_t home_images[] = {
-  { .image_path = "assets/space.jpg",
+  { .image_path = "assets/space.png",
     .image_box = (SDL_Rect){MIN.x, MIN.y, MAX.x, MAX.y}},
   { .image_path = "assets/title.png",
     .image_box = (SDL_Rect){MAX.x / 4, 20, MAX.x / 2, MAX.y / 3}},
-  { .image_path = "assets/box.jpeg",
+  { .image_path = "assets/box.png",
     .image_box = (SDL_Rect){525, 250, 200, 50},
     .font_path = "assets/Roboto.ttf",
     .text_box = (SDL_Rect){530, 260, 200, 75},
@@ -160,7 +160,7 @@ image_info_t home_images[] = {
 };
 
 image_info_t post_game_images[] = {
-  { .image_path = "assets/space.jpg",
+  { .image_path = "assets/space.png",
     .image_box = (SDL_Rect){MIN.x, MIN.y, MAX.x, MAX.y}},
   { .image_path = "assets/box.jpeg",
     .image_box = (SDL_Rect){300, 200, 400, 50}}
@@ -207,7 +207,7 @@ map_t maps[] = {
     .num_blocks = 4,
     .num_asteroids = 7,
     .num_bg = 0,
-    .backdrop_path = "assets/space2.jpg",
+    .backdrop_path = "assets/space2.png",
     .block_locations = (vector_t[]){(vector_t){100, 100},
     (vector_t){250, 250},
     (vector_t){400, 100},
@@ -223,7 +223,7 @@ map_t maps[] = {
     .num_blocks = 5,
     .num_asteroids = 12,
     .num_bg = 0,
-    .backdrop_path = "assets/space3.jpg",
+    .backdrop_path = "assets/space3.png",
     .block_locations = (vector_t[]){(vector_t){150, 150},
     (vector_t){300, 300},
     (vector_t){450, 150},
@@ -241,7 +241,7 @@ map_t maps[] = {
     .num_blocks = 6,
     .num_asteroids = 15,
     .num_bg = 0,
-    .backdrop_path = "assets/space4.jpg",
+    .backdrop_path = "assets/space4.png",
     .block_locations = (vector_t[]){(vector_t){600, 300},
     (vector_t){200, 400},
     (vector_t){350, 150},
