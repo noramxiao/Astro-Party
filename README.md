@@ -1,5 +1,5 @@
 # Astro Party
-Astro Party is a multiplayer space battle game where players control spaceships, aiming to outmaneuver and outgun their opponents, based on the popular game by Rusty Moyher. [Gameplay]([url](https://youtu.be/nlGNDvym1ds)).
+Astro Party is a multiplayer space battle game where players control spaceships, aiming to outmaneuver and outgun their opponents, based on the popular game by Rusty Moyher. Gameplay: https://youtu.be/nlGNDvym1ds.
 
 <img width="700" alt="image" src="https://github.com/noramxiao/Astro-Party/assets/73308763/8395b96f-f74c-4cdd-adef-4baa0d051da1">
 
