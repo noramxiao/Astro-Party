@@ -8,6 +8,7 @@ Win points by shooting your opponent. First to 5 points wins.
 Player Red:
  - W: Press/hold to rotate direction
  - Q: Shoot
+
 Player Blue:
  - M: Press/hold to Rotate direction
  - N: Shoot
@@ -15,5 +16,4 @@ Player Blue:
 ### TIPS
 - Shoot at asteroids to destroy them.
 - Double-click W/M for a boost to dodge bullets.
-
-### SOUND ON
+- Play this game with the sound on for the best experience.
