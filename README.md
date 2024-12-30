@@ -1,5 +1,5 @@
 # Astro Party
-> This game was implemented with 2 other students for my Software Design (CS3) final project at Caltech. Source code (other than **demo/game.c** is not included here to comply with course policy.
+> This game was implemented with 2 other students for my Software Design (CS3) final project at Caltech. Source code (other than **demo/game.c**) is not included here to comply with course policy.
 
 Astro Party is a multiplayer space battle game where players control spaceships, aiming to outmaneuver and outgun their opponents, based on the popular game by Rusty Moyher. Gameplay: https://youtu.be/nlGNDvym1ds.
 
